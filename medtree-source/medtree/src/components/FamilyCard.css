@@ -1,0 +1,219 @@
+.family-card {
+  background: var(--bg-card);
+  border-radius: 12px;
+  box-shadow: var(--shadow-md);
+  overflow: hidden;
+  width: 220px;
+  min-width: 200px;
+  transition: all var(--transition-normal);
+  border: 2px solid transparent;
+}
+
+.family-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* Card type variations */
+.card-user .card-header {
+  background: linear-gradient(135deg, var(--user-primary), var(--user-secondary));
+}
+
+.card-user .section-toggle {
+  border-color: var(--user-primary);
+  color: var(--user-primary);
+}
+
+.card-parent .card-header {
+  background: linear-gradient(135deg, var(--parent-primary), var(--parent-secondary));
+}
+
+.card-parent .section-toggle {
+  border-color: var(--parent-primary);
+  color: var(--parent-primary);
+}
+
+.card-grandparent .card-header {
+  background: linear-gradient(135deg, var(--grandparent-primary), var(--grandparent-secondary));
+}
+
+.card-grandparent .section-toggle {
+  border-color: var(--grandparent-primary);
+  color: var(--grandparent-primary);
+}
+
+/* Card header */
+.card-header {
+  padding: 1rem 1.25rem;
+  text-align: center;
+}
+
+.card-name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-light);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  font-style: italic;
+}
+
+/* Sections */
+.card-sections {
+  padding: 0.75rem;
+}
+
+.section {
+  margin-bottom: 0.5rem;
+}
+
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.section-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.5);
+  border: 1px solid;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.section-toggle:hover {
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.section-toggle.expanded {
+  border-radius: 6px 6px 0 0;
+}
+
+.toggle-icon {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--transition-fast);
+}
+
+.section-toggle.expanded .toggle-icon {
+  transform: rotate(180deg);
+}
+
+/* Section content */
+.section-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height var(--transition-normal);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+}
+
+.section-content.expanded {
+  max-height: 500px;
+}
+
+.card-content {
+  padding: 0.75rem;
+}
+
+.card-content p {
+  font-size: 0.85rem;
+  margin-bottom: 0.4rem;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.card-content p:last-child {
+  margin-bottom: 0;
+}
+
+.card-content strong {
+  font-weight: 600;
+}
+
+/* Medical issues list */
+.medical-list {
+  padding-left: 1.25rem;
+  margin: 0;
+}
+
+.medical-list li {
+  font-size: 0.85rem;
+  margin-bottom: 0.5rem;
+  color: var(--text-primary);
+}
+
+.medical-list li:last-child {
+  margin-bottom: 0;
+}
+
+.issue-name {
+  font-weight: 500;
+}
+
+.notes-list {
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+}
+
+.notes-list li {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.2rem;
+}
+
+/* Medications */
+.medications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.medication-item {
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.medication-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.medication-item p {
+  margin-bottom: 0.2rem;
+}
+
+.med-detail {
+  font-size: 0.8rem !important;
+  color: var(--text-secondary) !important;
+}
+
+/* No data state */
+.no-data {
+  font-style: italic;
+  color: var(--text-secondary) !important;
+  text-align: center;
+}
+
+/* Mobile adjustments */
+@media (max-width: 768px) {
+  .family-card {
+    width: 180px;
+    min-width: 160px;
+  }
+  
+  .card-name {
+    font-size: 1.1rem;
+  }
+  
+  .card-content p,
+  .medical-list li {
+    font-size: 0.8rem;
+  }
+}
