@@ -38,8 +38,7 @@ Password: password123
 
 1. Extract the source code:
 ```bash
-unzip medtree-source.zip
-cd medtree
+cd frontend
 ```
 
 2. Install dependencies:
