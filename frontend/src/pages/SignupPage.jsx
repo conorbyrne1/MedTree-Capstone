@@ -8,7 +8,9 @@ const SignupPage = () => {
     firstName: '',
     lastName: '',
     email: '',
-    dob: '',
+    dobDay: '',
+    dobMonth: '',
+    dobYear: '',
     password: '',
     confirmPassword: ''
   });
@@ -37,15 +39,33 @@ const SignupPage = () => {
       return;
     }
 
+    if (!formData.dobDay || !formData.dobMonth || !formData.dobYear) {
+      setError('Date of birth is required');
+      return;
+    }
+
+    const day = formData.dobDay.padStart(2, '0');
+    const month = formData.dobMonth.padStart(2, '0');
+    const dob = `${formData.dobYear}-${month}-${day}`;
+    const dobDate = new Date(dob);
+    if (isNaN(dobDate.getTime())) {
+      setError('Invalid date of birth');
+      return;
+    }
+
     setLoading(true);
 
     try {
+      const day = formData.dobDay.padStart(2, '0');
+      const month = formData.dobMonth.padStart(2, '0');
+      const dob = `${formData.dobYear}-${month}-${day}`;
+
       const result = await signup({
         firstName: formData.firstName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        dob: formData.dob
+        dob: dob
       });
 
       if (result.success) {
@@ -111,6 +131,8 @@ const SignupPage = () => {
                     placeholder="DD"
                     maxLength="2"
                     className="dob-input"
+                    value={formData.dobDay}
+                    onChange={handleChange}
                   />
                   <input
                     type="text"
@@ -119,6 +141,8 @@ const SignupPage = () => {
                     placeholder="MM"
                     maxLength="2"
                     className="dob-input"
+                    value={formData.dobMonth}
+                    onChange={handleChange}
                   />
                   <input
                     type="text"
@@ -127,6 +151,8 @@ const SignupPage = () => {
                     placeholder="YYYY"
                     maxLength="4"
                     className="dob-input year"
+                    value={formData.dobYear}
+                    onChange={handleChange}
                   />
                 </div>
               </div>

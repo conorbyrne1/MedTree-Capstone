@@ -66,6 +66,7 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
     person_id = person_result.lastrowid
 
     # Insert Account row
+    print(f"Password value: '{body.password}', type: {type(body.password)}, length: {len(body.password)}")
     account_result = db.execute(text("""
                                      INSERT INTO Account (Username, Password, PersonID)
                                      VALUES (:username, :password, :person_id)
