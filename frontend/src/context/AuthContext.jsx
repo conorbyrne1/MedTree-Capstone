@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { api } from '../data/database';
+const API_URL = 'http://localhost:8000';
 
 const AuthContext = createContext(null);
 
@@ -10,33 +10,53 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Check for stored user session
     const storedUser = localStorage.getItem('medtree_user');
-    if (storedUser) {
+    const storedToken = localStorage.getItem('medtree_token')
+    if (storedUser && storedToken) {
       setUser(JSON.parse(storedUser));
     }
     setLoading(false);
   }, []);
 
   const login = async (email, password) => {
-    const result = await api.login(email, password);
-    if (result.success) {
-      setUser(result.user);
-      localStorage.setItem('medtree_user', JSON.stringify(result.user));
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method:'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({email, password}),
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.detail || 'Login failed' };
+      setUser(data.user);
+      localStorage.setItem('medtree_token', data.access_token);
+      localStorage.setItem('medtree_user', JSON.stringify(data.user));
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: 'Could not connect to server' };
     }
-    return result;
   };
 
   const signup = async (userData) => {
-    const result = await api.signup(userData);
-    if (result.success) {
-      setUser(result.user);
-      localStorage.setItem('medtree_user', JSON.stringify(result.user));
+    try {
+      const res = await fetch(`${API_URL}/auth/signup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+      });
+      const data = await res.json();
+      if (!res.ok) return { success: false, error: data.detail || 'Signup failed' };
+      setUser(data.user);
+      localStorage.setItem('medtree_token', data.access_token);
+      localStorage.setItem('medtree_user', JSON.stringify(data.user));
+      return { success: true };
+    } catch (err) {
+      return { success: false, error: 'Could not connect to server' };
     }
-    return result;
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('medtree_user');
+    localStorage.removeItem('medtree_token');
   };
 
   const value = {

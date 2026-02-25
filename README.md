@@ -1,139 +1,155 @@
-# MedTree - Family Medical History Tracker
+# MedTree
 
-A React application for tracking and visualizing family medical history across generations.
+MedTree is a full-stack web application for tracking and visualizing family medical history across generations. Users can build an interactive family tree, record medical conditions and medications for each family member, and view inherited health patterns at a glance.
 
-## Features
-
-- **Interactive Family Tree**: Draggable, zoomable tree visualization with color-coded cards for different generations
-  - Blue cards: User (you)
-  - Orange cards: Parents
-  - Pink cards: Grandparents/Great-grandparents
-
-- **Expandable Information Cards**: Click to expand sections showing:
-  - Basic info (age, DOB, sex, alive status)
-  - Medical issues with notes
-  - Medications (for user)
-  - Death information (for deceased family members)
-
-- **User Authentication**: Login/signup functionality with session persistence
-
-- **Medical Data Management**:
-  - Add medical conditions for any family member
-  - Track medications
-  - Add healthcare providers
-
-## Demo Credentials
-
-```
-Email: john@example.com
-Password: password123
-```
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+ installed
-
-### Installation
-
-1. Extract the source code:
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-4. Open http://localhost:5173 in your browser
-
-### Production Build
-
-```bash
-npm run build
-```
-
-The built files will be in the `dist/` folder.
+---
 
 ## Project Structure
 
 ```
-medtree/
-├── src/
-│   ├── components/         # Reusable UI components
-│   │   ├── Header.jsx      # Navigation header
-│   │   ├── FamilyCard.jsx  # Expandable member card
-│   │   └── FamilyTree.jsx  # Draggable tree visualization
-│   ├── pages/              # Route pages
-│   │   ├── HomePage.jsx    # Landing & dashboard
-│   │   ├── LoginPage.jsx   # Authentication
-│   │   ├── SignupPage.jsx  # Registration
-│   │   ├── FamilyTreePage.jsx  # Tree view
-│   │   ├── AboutPage.jsx   # About info
-│   │   ├── AccountPage.jsx # User profile
-│   │   ├── AddMedicalPage.jsx  # Add conditions/medications
-│   │   └── AddProfessionalPage.jsx  # Add doctors
-│   ├── context/
-│   │   └── AuthContext.jsx # Authentication state
-│   ├── data/
-│   │   └── database.js     # Mock database & API
-│   ├── styles/
-│   │   └── global.css      # Global styles & variables
-│   ├── App.jsx             # Main app with routing
-│   └── main.jsx            # Entry point
-├── index.html
-├── vite.config.js
-└── package.json
+MedTree-Capstone/
+├── backend/
+│   ├── main.py
+│   ├── config.py
+│   ├── database.py
+│   ├── auth.py
+│   ├── schemas.py
+│   ├── requirements.txt
+│   ├── .env
+│   └── routes/
+│       ├── __init__.py
+│       ├── auth.py
+│       ├── family.py
+│       └── medical.py
+└── src/
+    ├── App.jsx
+    ├── main.jsx
+    ├── context/
+    │   └── AuthContext.jsx
+    ├── pages/
+    │   ├── HomePage.jsx
+    │   ├── LoginPage.jsx
+    │   ├── SignupPage.jsx
+    │   ├── FamilyTreePage.jsx
+    │   ├── AccountPage.jsx
+    │   ├── AddMedicalPage.jsx
+    │   ├── AddProfessionalPage.jsx
+    │   └── AboutPage.jsx
+    └── components/
+        ├── Header.jsx
+        ├── FamilyTree.jsx
+        └── FamilyCard.jsx
 ```
 
-## Database Integration
+---
 
-The app uses a mock database (`src/data/database.js`). To connect to a real database:
+## Tech Stack
 
-1. Replace the mock API functions with actual API calls
-2. Update the data structures to match your database schema
-3. Add proper authentication (JWT, OAuth, etc.)
+**Frontend**
+- React (Vite)
+- React Router
+- Plain CSS
 
-### API Functions to Replace
+**Backend**
+- Python 3.12
+- FastAPI
+- SQLAlchemy Core (raw SQL, no ORM)
+- PyMySQL
+- passlib + bcrypt (password hashing)
+- python-jose (JWT authentication)
 
-- `api.login()` - User authentication
-- `api.signup()` - User registration
-- `api.getFamilyTree()` - Fetch family tree data
-- `api.addFamilyMember()` - Add new family member
-- `api.updateFamilyMember()` - Update member info
-- `api.addMedicalIssue()` - Add medical condition
-- `api.addMedication()` - Add medication
-- `api.getMedicalProfessionals()` - Get healthcare providers
-- `api.addMedicalProfessional()` - Add healthcare provider
+**Database**
+- MySQL
 
-## Customization
+---
 
-### Colors
-Edit CSS variables in `src/styles/global.css`:
-```css
-:root {
-  --user-primary: #00b8e6;      /* User card color */
-  --parent-primary: #ff9933;    /* Parent card color */
-  --grandparent-primary: #ff6b9d; /* Grandparent card color */
-}
+## Prerequisites
+
+- Node.js 18+
+- Python 3.12+
+- MySQL server running with the `medtree` schema applied
+
+---
+
+## Database Setup
+
+Apply the schema to your MySQL instance before running the backend:
+
+```bash
+mysql -u your_username -p < MedTreeCreateDatabase.sql
 ```
 
-### Adding More Generations
-The data structure supports great-grandparents. Extend `FamilyTree.jsx` to add more rows.
+The schema creates the following tables: `Person`, `Account`, `Contact`, `AccountContact`, `PersonRelationshipTypes`, `PersonRelationships`, `MedicalDiagnosis`, `PersonMedicalDiagnosis`, `Medications`, `PersonMedications`, `PreviousProcedures`, `PersonPreviousProcedures`, `Allergies`, `PersonAllergies`, `MedicalOffice`, `MedicalOfficePerson`.
 
-## Browser Support
+---
 
-- Chrome (latest)
-- Firefox (latest)
-- Safari (latest)
-- Edge (latest)
+## Backend Setup
 
-## License
+```bash
+cd backend
+python -m venv .venv
+.venv\Scripts\activate        # Windows
+# source .venv/bin/activate   # Mac/Linux
+pip install -r requirements.txt
+```
 
-MIT License
+Create a `.env` file inside the `backend/` folder:
+
+```
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=your_mysql_username
+DB_PASSWORD=your_mysql_password
+DB_NAME=medtree
+JWT_SECRET=pick-a-long-random-string-here
+```
+
+Run the backend:
+
+```bash
+python -m uvicorn main:app --reload
+```
+
+The API will be available at `http://localhost:8000`. An interactive API explorer is available at `http://localhost:8000/docs`.
+
+---
+
+## Frontend Setup
+
+From the project root:
+
+```bash
+npm install
+npm run dev
+```
+
+The React app will be available at `http://localhost:5173`.
+
+---
+
+## Authentication
+
+Authentication uses JWT tokens. On login or signup, a token is issued and stored in `localStorage` under the key `medtree_token`. All protected API routes require this token as a Bearer header. Tokens expire after 24 hours.
+
+Passwords are stored as bcrypt hashes. There are no plaintext passwords in the database.
+
+---
+
+## API Overview
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/auth/signup` | Create a new account | No |
+| POST | `/auth/login` | Log in and receive a token | No |
+| GET | `/family/tree` | Get the logged-in user's family tree | Yes |
+| POST | `/family/member` | Add a family member | Yes |
+| POST | `/medical/condition` | Add a medical condition to a family member | Yes |
+| POST | `/medical/medication` | Add a medication for the logged-in user | Yes |
+| GET | `/health` | Health check | No |
+
+## Development Notes
+
+- Always activate the virtual environment before running the backend: `.venv\Scripts\activate`
+- The backend must be running on port `8000` and the frontend on port `5173` for CORS to work correctly in development
+- The `PersonRelationshipTypes` table requires at least one row with `TypeName = 'parent'`. The backend creates this row automatically on the first call to add a family member if it does not already exist
+- The `.env` file is excluded from version control and must be created manually on each new environment

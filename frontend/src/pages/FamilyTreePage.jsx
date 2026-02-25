@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FamilyTree from '../components/FamilyTree';
-import { api } from '../data/database';
 import './FamilyTreePage.css';
 
 const FamilyTreePage = () => {
@@ -16,20 +15,19 @@ const FamilyTreePage = () => {
       if (!user) return;
       
       try {
-        const result = await api.getFamilyTree(user.id);
-        if (result.success) {
-          setFamilyData(result.data);
-        } else {
-          setError(result.error);
-        }
+        const token = localStorage.getItem('medtree_token');
+        const res = await fetch('http://localhost:8000/family/tree', {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to load family tree.');
+        setFamilyData(data);
       } catch (err) {
         setError('Failed to load family tree');
       } finally {
         setLoading(false);
       }
     };
-
-    loadFamilyTree();
   }, [user]);
 
   if (!isAuthenticated) {
