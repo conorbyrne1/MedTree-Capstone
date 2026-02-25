@@ -121,6 +121,11 @@ logs
 **/*.backup.*
 **/*.back.*
 
+# Build outputs
+frontend/dist/
+dist/
+
+# Dependencies
 node_modules
 bower_components
 
