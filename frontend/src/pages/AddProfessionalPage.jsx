@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../data/database';
 import './AddMedicalPage.css';
 
 const AddProfessionalPage = () => {
@@ -32,13 +31,9 @@ const AddProfessionalPage = () => {
     setSubmitting(true);
     
     try {
-      const result = await api.addMedicalProfessional(user.id, form);
-      
-      if (result.success) {
-        setSuccess(true);
-        setForm({ name: '', specialty: '', phone: '', email: '', address: '' });
-        setTimeout(() => setSuccess(false), 3000);
-      }
+      // Professional endpoint not yet implemented — placeholder for future use
+      console.warn('Add professional not yet implemented');
+      setSubmitting(false);
     } catch (err) {
       console.error('Failed to add professional:', err);
     } finally {

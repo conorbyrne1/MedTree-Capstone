@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../data/database';
 import './AddMedicalPage.css';
 
 const AddMedicalPage = () => {
@@ -29,15 +28,20 @@ const AddMedicalPage = () => {
   useEffect(() => {
     const loadFamilyMembers = async () => {
       if (!user) return;
-      
+
       try {
-        const result = await api.getFamilyTree(user.id);
-        if (result.success) {
+        const token = localStorage.getItem('medtree_token');
+        const res = await fetch('http://localhost:8000/family/tree', {
+          headers: {Authorization: `Bearer ${token}`}
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to load family members.');
+        if (data.success) {
           const members = [
-            result.data.user,
-            ...result.data.parents,
-            ...result.data.grandparents,
-            ...result.data.greatGrandparents
+            data.data.user,
+            ...data.data.parents,
+            ...data.data.grandparents,
+            ...data.data.greatGrandparents
           ].filter(Boolean);
           setFamilyMembers(members);
         }
@@ -47,7 +51,6 @@ const AddMedicalPage = () => {
         setLoading(false);
       }
     };
-
     loadFamilyMembers();
   }, [user]);
 
@@ -60,16 +63,24 @@ const AddMedicalPage = () => {
     setSubmitting(true);
     
     try {
-      const result = await api.addMedicalIssue(user.id, conditionForm.memberId, {
-        issue: conditionForm.issue,
-        notes: conditionForm.notes.split('\n').filter(n => n.trim())
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch('http://localhost:8000/medical/condition', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          memberId: conditionForm.memberId,
+          issue: conditionForm.issue,
+          notes: conditionForm.notes.split('\n').filter(n => n.trim())
+        })
       });
-      
-      if (result.success) {
-        setSuccess(true);
-        setConditionForm({ memberId: '', issue: '', notes: '' });
-        setTimeout(() => setSuccess(false), 3000);
-      }
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to add condition.');
+      setSuccess(true);
+      setConditionForm({ memberId: '', issue: '', notes: '' });
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to add condition:', err);
     } finally {
@@ -82,13 +93,20 @@ const AddMedicalPage = () => {
     setSubmitting(true);
     
     try {
-      const result = await api.addMedication(user.id, medicationForm);
-      
-      if (result.success) {
-        setSuccess(true);
-        setMedicationForm({ name: '', dosage: '', prescribedBy: '', reason: '' });
-        setTimeout(() => setSuccess(false), 3000);
-      }
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch('http://localhost:8000/medical/medication', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(medicationForm)
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to add medication');
+      setSuccess(true);
+      setMedicationForm({ name: '', dosage: '', prescribedBy: '', reason: '' });
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
       console.error('Failed to add medication:', err);
     } finally {
