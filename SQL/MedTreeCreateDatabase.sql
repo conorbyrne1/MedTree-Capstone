@@ -321,6 +321,29 @@ CREATE TABLE IF NOT EXISTS `medtree`.`PersonAllergies` (
 ENGINE = InnoDB;
 
 
+-- -----------------------------------------------------
+-- Table `medtree`.`MedicalProfessionals`
+-- -----------------------------------------------------
+DROP TABLE IF EXISTS `medtree`.`MedicalProfessionals` ;
+
+CREATE TABLE IF NOT EXISTS `medtree`.`MedicalProfessionals` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `AccountID` INT NOT NULL,
+  `Name` VARCHAR(255) NOT NULL,
+  `Specialty` VARCHAR(255) NOT NULL,
+  `Phone` VARCHAR(50) NULL,
+  `Email` VARCHAR(255) NULL,
+  `Address` VARCHAR(255) NULL,
+  PRIMARY KEY (`ID`),
+  INDEX `fk_mp_account_idx` (`AccountID` ASC) VISIBLE,
+  CONSTRAINT `fk_mp_account`
+    FOREIGN KEY (`AccountID`)
+    REFERENCES `medtree`.`Account` (`ID`)
+    ON DELETE CASCADE
+    ON UPDATE NO ACTION)
+ENGINE = InnoDB;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
