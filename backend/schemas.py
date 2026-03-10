@@ -115,6 +115,18 @@ class AddMedicationRequest(BaseModel):
 class AddMedicationResponse(BaseModel):
     success: bool
 
+# Medical Professionals
+class AddProfessionalRequest(BaseModel):
+    name: str
+    specialty: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+class AddProfessionalResponse(BaseModel):
+    success: bool
+    id: int
+
     # Account update
 class UpdateAccountRequest(BaseModel):
     firstName: str
