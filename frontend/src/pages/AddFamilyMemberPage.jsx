@@ -11,11 +11,13 @@ const AddFamilyMemberPage = () => {
     const [error, setError] = useState('');
 
     const [form, setForm] = useState({
-        name: '',
-        specialty: '',
-        phone: '',
-        email: '',
-        address: ''
+        firstName: '',
+        middleName: '',
+        lastName: '',
+        relationship: '',
+        deceased: '',
+        dateOfBirth: '',
+        gender: '',
     });
 
     if (!isAuthenticated) {
@@ -81,7 +83,7 @@ const AddFamilyMemberPage = () => {
                 <div className="form-card">
                     <form onSubmit={handleSubmit} className="medical-form">
                         <div className="form-group">
-                            <label htmlFor="name">Full Name</label>
+                            <label htmlFor="name">First Name</label>
                             <input
                                 type="text"
                                 id="name"
@@ -89,6 +91,32 @@ const AddFamilyMemberPage = () => {
                                 value={form.name}
                                 onChange={handleChange}
                                 placeholder="John Smith"
+                                required
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="name">Middle Name</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                placeholder="Samuel"
+                                optional
+                            />
+                        </div>
+
+                        <div className="form-group">
+                            <label htmlFor="name">Last Name</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                value={form.name}
+                                onChange={handleChange}
+                                placeholder="Smith"
                                 required
                             />
                         </div>
