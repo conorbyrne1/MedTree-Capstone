@@ -10,7 +10,7 @@ from database import get_db
 from config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-bearer_scheme = HTTPBearer
+bearer_scheme = HTTPBearer()
 
 # Password Helpers
 def hash_password(password: str) -> str:
@@ -27,7 +27,7 @@ def create_access_token(data: dict) -> str:
 
 def decode_access_token(token: str) -> Optional[dict]:
     try:
-        return jwt.decode(token, settings.JWT_SECRET, algorithms=settings.JWT_ALGORITHM)
+        return jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
     except JWTError:
         return None
 
