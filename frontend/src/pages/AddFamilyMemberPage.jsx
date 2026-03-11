@@ -44,7 +44,7 @@ const AddFamilyMemberPage = () => {
             });
 
             const data = await res.json();
-            if (!res.ok) throw new Error(data.detail || 'Failed to add professional.');
+            if (!res.ok) throw new Error(data.detail || 'Failed to add family member.');
 
             setSuccess(true);
             setForm({ name: '', specialty: '', phone: '', email: '', address: '' });
@@ -70,7 +70,7 @@ const AddFamilyMemberPage = () => {
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                             <polyline points="22 4 12 14.01 9 11.01" />
                         </svg>
-                        Medical professional added successfully!
+                        Family member added successfully!
                     </div>
                 )}
 
@@ -88,20 +88,20 @@ const AddFamilyMemberPage = () => {
                                 name="name"
                                 value={form.name}
                                 onChange={handleChange}
-                                placeholder="e.g., Dr. Sarah Williams"
+                                placeholder="John Smith"
                                 required
                             />
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="specialty">Specialty</label>
+                            <label htmlFor="specialty">Relationship</label>
                             <input
                                 type="text"
                                 id="specialty"
                                 name="specialty"
                                 value={form.specialty}
                                 onChange={handleChange}
-                                placeholder="e.g., Cardiologist"
+                                placeholder="Father, Mother, Grandparent, etc."
                                 required
                             />
                         </div>
