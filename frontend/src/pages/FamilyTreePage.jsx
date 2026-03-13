@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import FamilyTree from '../components/FamilyTree';
 import './FamilyTreePage.css';
 
 const FamilyTreePage = () => {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, user, loading: authLoading, logout } = useAuth();
+  const navigate = useNavigate();
   const [familyData, setFamilyData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const loadFamilyTree = async () => {
+
+    const loadFamilyTree = useCallback(async () => {
       if (!user) return;
+      setLoading(true);
+      setError(null);
       
       try {
         const token = localStorage.getItem('medtree_token');
@@ -20,6 +23,11 @@ const FamilyTreePage = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
+        if (res.status !== 401) {
+          logout();
+          navigate('/login');
+          return;
+        }
         if (!res.ok) throw new Error(data.detail || 'Failed to load family tree.');
         setFamilyData(data);
       } catch (err) {
@@ -27,14 +35,18 @@ const FamilyTreePage = () => {
       } finally {
         setLoading(false);
       }
-    };
-  }, [user]);
+    }, [user, logout, navigate]);
 
-  if (!isAuthenticated) {
+  useEffect(() => {
+    if(!authLoading)
+      loadFamilyTree();
+  }, [authLoading, loadFamilyTree]);
+
+  if (!authloading && !isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
-  if (loading) {
+  if (authLoading || loading) {
     return (
       <div className="tree-page">
         <div className="loading-state">
@@ -50,7 +62,7 @@ const FamilyTreePage = () => {
       <div className="tree-page">
         <div className="error-state">
           <p>{error}</p>
-          <button onClick={() => window.location.reload()}>Try Again</button>
+          <button onClick={loadFamilyTree}>Try Again</button>
         </div>
       </div>
     );
