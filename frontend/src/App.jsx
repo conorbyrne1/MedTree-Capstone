@@ -15,7 +15,7 @@ import AddFamilyMemberPage from "./pages/AddFamilyMemberPage";
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/MedTree-Capstone">
         <div className="app">
           <Header />
           <main>
