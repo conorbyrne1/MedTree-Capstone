@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
+import PasswordAdditions, { PasswordInput } from "./PasswordAdditions";
 
 const SignupPage = () => {
   const [formData, setFormData] = useState({
@@ -217,21 +218,21 @@ const SignupPage = () => {
 
             <div className="form-group">
               <label htmlFor="password">Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 id="password"
                 name="password"
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
                 required
+                className={formData.password ? 'pw-attached' : ''}
               />
+              <PasswordAdditions password={formData.password} />
             </div>
 
             <div className="form-group">
               <label htmlFor="confirmPassword">Confirm Password</label>
-              <input
-                type="password"
+              <PasswordInput
                 id="confirmPassword"
                 name="confirmPassword"
                 value={formData.confirmPassword}
