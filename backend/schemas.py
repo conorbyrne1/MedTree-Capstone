@@ -20,8 +20,13 @@ class LoginRequest(BaseModel):
 class UserResponse(BaseModel):
     id: int
     firstName: str
+    middleName: Optional[str] = None
     lastName: str
     email: str
+    dateOfBirth: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
+    isDeceased: bool = False
 
     class Config:
         from_attributes = True
@@ -108,4 +113,27 @@ class AddMedicationRequest(BaseModel):
     reason: Optional[str] = None
 
 class AddMedicationResponse(BaseModel):
+    success: bool
+
+    # Account update
+class UpdateAccountRequest(BaseModel):
+    firstName: str
+    middleName: Optional[str] = None
+    lastName: str
+    email: str
+    dateOfBirth: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
+    isDeceased: bool = False
+    currentPassword: str
+
+class UpdateAccountResponse(BaseModel):
+    success: bool
+    user: UserResponse
+
+class ChangePasswordRequest(BaseModel):
+    currentPassword: str
+    newPassword: str
+
+class ChangePasswordResponse(BaseModel):
     success: bool

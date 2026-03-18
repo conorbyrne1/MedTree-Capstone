@@ -9,12 +9,32 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Check for stored user session
-    const storedUser = localStorage.getItem('medtree_user');
-    const storedToken = localStorage.getItem('medtree_token')
-    if (storedUser && storedToken) {
-      setUser(JSON.parse(storedUser));
+    const storedToken = localStorage.getItem('medtree_token');
+    if (!storedToken) {
+      setLoading(false);
+      return;
     }
-    setLoading(false);
+    // Re-fetch the full user from the server so we always have fresh data
+    fetch(`${API_URL}/account/me`, {
+      headers: { Authorization: `Bearer ${storedToken}` }
+    })
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          if (data) {
+            setUser(data);
+            localStorage.setItem('medtree_user', JSON.stringify(data));
+          } else {
+            // Token expired or invalid — clear session
+            localStorage.removeItem('medtree_token');
+            localStorage.removeItem('medtree_user');
+          }
+        })
+        .catch(() => {
+          // Server unreachable — fall back to stored user
+          const storedUser = localStorage.getItem('medtree_user');
+          if (storedUser) setUser(JSON.parse(storedUser));
+        })
+        .finally(() => setLoading(false));
   }, []);
 
   const login = async (email, password) => {
@@ -61,6 +81,7 @@ export const AuthProvider = ({ children }) => {
 
   const value = {
     user,
+    setUser,
     loading,
     login,
     signup,

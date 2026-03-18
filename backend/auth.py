@@ -10,7 +10,7 @@ from database import get_db
 from config import settings
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-bearer_scheme = HTTPBearer
+bearer_scheme = HTTPBearer()
 
 # Password Helpers
 def hash_password(password: str) -> str:
@@ -53,11 +53,13 @@ def get_current_user(
         )
 
     row = db.execute(text("""
-    SELECT a.ID as account_id, a.PersonID, p.FirstName, p.LastName, a.Username
-    FROM Account a
-    JOIN Person p ON p.ID = a.PersonID
-    WHERE a.ID = :account_id
-    """), {"account_id": account_id}).mappings().first()
+                          SELECT a.ID as account_id, a.PersonID, a.Username,
+                                 p.FirstName, p.MiddleName, p.LastName,
+                                 p.DateOfBirth, p.GenderIdentity, p.GenderAssignedAtBirth, p.IsDeceased
+                          FROM Account a
+                                   JOIN Person p ON p.ID = a.PersonID
+                          WHERE a.ID = :account_id
+                          """), {"account_id": account_id}).mappings().first()
 
     if row is None:
         raise HTTPException(

@@ -207,8 +207,8 @@ def add_family_member(
 
     # Insert new Person
     result = db.execute(text("""
-                             INSERT INTO Person (FirstName, MiddleName, LastName, IsDeceased, DateOfBirth, Gender)
-                             VALUES (:first, :middle, :last, :deceased, :dob, :gender)
+                             INSERT INTO Person (FirstName, MiddleName, LastName, IsDeceased, DateOfBirth, GenderIdentity, GenderAssignedAtBirth)
+                             VALUES (:first, :middle, :last, :deceased, :dob, :gender_identity, :gender_assigned)
                              """), {
                             "first": body.firstName,
                             "middle": body.middleName,

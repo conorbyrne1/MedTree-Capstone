@@ -5,7 +5,7 @@ import './AccountPage.css';
 import PasswordAdditions, { PasswordInput } from './PasswordAdditions';
 
 const AccountPage = () => {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, user, setUser, logout } = useAuth();
   const navigate = useNavigate();
   const [editMode,setEditMode] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -57,9 +57,11 @@ const AccountPage = () => {
     }
     setEditLoading(true);
     setEditError('');
+
+    let res, data;
     try {
       const token = localStorage.getItem('medtree_token');
-      const res = await fetch(`http://localhost:8000/account/update`, {
+      res = await fetch(`http://localhost:8000/account/update`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -67,18 +69,27 @@ const AccountPage = () => {
         },
         body: JSON.stringify({ ...editForm, currentPassword: editPassword })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setEditError(data.detail || 'Failed to save changes.');
-      } else {
-        const updatedUser = { ...user, ...editForm };
-        localStorage.setItem('medtree_token', JSON.stringify(updatedUser));
-        window.location.reload();
-      }
+      data = await res.json();
     } catch {
       setEditError('Could not connect to server.');
+      setEditLoading(false);
+      return;
     } finally {
       setEditLoading(false);
+    }
+
+    if (!res.ok) {
+      setEditError(data.detail || 'Failed to save changes.');
+    } else if (!data?.user) {
+      setEditMode(false);
+      setEditPassword('');
+    } else {
+      if (data?.user) {
+        localStorage.setItem('medtree_token', JSON.stringify(data.user));
+        setUser(data.user);
+      }
+      setEditMode(false);
+      setEditPassword('');
     }
   };
 
@@ -104,9 +115,11 @@ const AccountPage = () => {
     }
     setPwLoading(true);
     setPwError('');
+
+    let res, data;
     try {
-      const token = localstorage.getItem('medtree_token');
-      const res = await fetch(`http://localhost:8000/account/password`, {
+      const token = localStorage.getItem('medtree_token');
+      res = await fetch('http://localhost:8000/account/password', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -117,16 +130,19 @@ const AccountPage = () => {
           newPassword: pwForm.newPassword
         })
       });
-      const data = await res.json();
-      if (!res.ok) {
-        setPwError(data.detail || 'Failed to change password.');
-      } else {
-        setPwMode(false);
-      }
+      data = await res.json();
     } catch {
       setPwError('Could not connect to server.');
+      setPwLoading(false);
+      return;
     } finally {
       setPwLoading(false);
+    }
+
+    if (!res.ok) {
+      setPwError(data?.detail || 'Failed to change password.');
+    } else {
+      setPwMode(false);
     }
   };
 

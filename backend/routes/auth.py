@@ -85,13 +85,20 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
 
     token = create_access_token({"account_id": account_id})
 
+    dob_str = dob.strftime("%Y-%m-%d") if dob else None
+
     return TokenResponse(
         access_token=token,
         user=UserResponse(
             id=account_id,
             firstName=body.firstName,
+            middleName=body.middleName,
             lastName=body.lastName,
-            email=body.email
+            email=body.email,
+            dateOfBirth=dob_str,
+            genderIdentity=body.genderIdentity,
+            genderAssignedAtBirth=body.genderAssignedAtBirth,
+            isDeceased=False
         )
     )
 
@@ -101,7 +108,10 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 
     row = db.execute(text("""
                           SELECT a.ID as account_id, a.Password,
-                                 p.FirstName, p.LastName, a.Username
+                                 p.FirstName, p.MiddleName, p.LastName,
+                                 p.DateOfBirth, p.GenderIdentity,
+                                 p.GenderAssignedAtBirth, p.IsDeceased,
+                                 a.Username
                           FROM Account a
                                    JOIN Person p ON p.ID = a.PersonID
                           WHERE a.Username = :email
@@ -115,12 +125,19 @@ def login(body: LoginRequest, db: Session = Depends(get_db)):
 
     token = create_access_token({"account_id": row["account_id"]})
 
+    dob_str = row["DateOfBirth"].strftime("%Y-%m-%d") if row["DateOfBirth"] else None
+
     return TokenResponse(
         access_token=token,
         user=UserResponse(
             id=row["account_id"],
             firstName=row["FirstName"],
+            middleName=row["MiddleName"],
             lastName=row["LastName"],
-            email=row["Username"]
+            email=row["Username"],
+            dateOfBirth=dob_str,
+            genderIdentity=row["GenderIdentity"],
+            genderAssignedAtBirth=row["GenderAssignedAtBirth"],
+            isDeceased=bool(row["IsDeceased"])
         )
     )
