@@ -6,11 +6,14 @@ import './AuthPages.css';
 const SignupPage = () => {
   const [formData, setFormData] = useState({
     firstName: '',
+    middleName: '',
     lastName: '',
     email: '',
     dobDay: '',
     dobMonth: '',
     dobYear: '',
+    genderIdentity: '',
+    genderAssignedAtBirth: '',
     password: '',
     confirmPassword: ''
   });
@@ -62,10 +65,13 @@ const SignupPage = () => {
 
       const result = await signup({
         firstName: formData.firstName,
+        middleName: formData.middleName,
         lastName: formData.lastName,
         email: formData.email,
         password: formData.password,
-        dob: dob
+        dob: dob,
+        genderIdentity: formData.genderIdentity,
+        genderAssignedAtBirth: formData.genderAssignedAtBirth
       });
 
       if (result.success) {
@@ -103,6 +109,18 @@ const SignupPage = () => {
                   onChange={handleChange}
                   placeholder="John"
                   required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="middleName">Middle Name</label>
+                <input
+                    type="text"
+                    id="middleName"
+                    name="middleName"
+                    value={formData.middleName}
+                    onChange={handleChange}
+                    placeholder="Lee"
                 />
               </div>
 
@@ -156,6 +174,32 @@ const SignupPage = () => {
                   />
                 </div>
               </div>
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="genderIdentity">Gender Identity</label>
+              <input
+                  type="text"
+                  id="genderIdentity"
+                  name="genderIdentity"
+                  value={formData.genderIdentity}
+                  onChange={handleChange}
+                  placeholder="The gender you currently identify as"
+                  required
+              />
+            </div>
+
+            <div className="form-group">
+              <label htmlFor="genderAssignedAtBirth">Gender Assigned at Birth</label>
+              <input
+                  type="text"
+                  id="genderAssignedAtBirth"
+                  name="genderAssignedAtBirth"
+                  value={formData.genderAssignedAtBirth}
+                  onChange={handleChange}
+                  placeholder="The gender you were assigned at birth"
+                  required
+              />
             </div>
 
             <div className="form-group">

@@ -52,15 +52,18 @@ def signup(body: SignupRequest, db: Session = Depends(get_db)):
     person_result = db.execute(text("""
                                     INSERT INTO Person (FirstName, MiddleName,
                                                         LastName, IsDeceased,
-                                                        DateOfBirth, Gender)
+                                                        DateOfBirth,
+                                                        GenderIdentity,
+                                                        GenderAssignedAtBirth)
                                     VALUES (:first, :middle, :last, 0, :dob,
-                                            :gender)
+                                            :gender_identity, :gender_assigned)
                                     """), {
                                    "first": body.firstName,
                                    "middle": body.middleName,
                                    "last": body.lastName,
                                    "dob": dob,
-                                   "gender": body.gender
+                                   "gender_identity": body.genderIdentity,
+                                   "gender_assigned": body.genderAssignedAtBirth
                                })
     db.flush()
     person_id = person_result.lastrowid

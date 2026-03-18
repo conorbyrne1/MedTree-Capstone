@@ -49,10 +49,6 @@ const AccountPage = () => {
               <span className="label">Email</span>
               <span className="value">{user?.email || '-'}</span>
             </div>
-            <div className="detail-row">
-              <span className="label">Member Since</span>
-              <span className="value">January 2024</span>
-            </div>
           </div>
 
           <div className="actions-section">

@@ -10,7 +10,8 @@ class SignupRequest(BaseModel):
     email: str
     password: str
     dob: Optional[str] = None
-    gender: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
 
 class LoginRequest(BaseModel):
     email: str
@@ -49,7 +50,8 @@ class DeathInfoSchema(BaseModel):
 class PersonInfoSchema(BaseModel):
     age: Optional[int] = None
     dob: Optional[str] = None
-    sex: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
     alive: Optional[bool] = None
 
 class FamilyMemberResponse(BaseModel):
@@ -76,7 +78,8 @@ class AddFamilyMemberRequest(BaseModel):
     firstName: str
     lastName: str
     middleName: Optional[str] = None
-    gender: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
     dob: Optional[str] = None
     isDeceased: bool = False
     deathDate: Optional[str] = None
