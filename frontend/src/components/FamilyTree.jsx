@@ -10,25 +10,9 @@ const FamilyTree = ({ familyData }) => {
   const [showResetButton, setShowResetButton] = useState(false);
   const [scale, setScale] = useState(1);
 
-  // Check if we have family data
-  if (!familyData) {
-    return (
-      <div className="tree-empty">
-        <p>No family data available. Add family members to build your medical tree.</p>
-      </div>
-    );
-  }
-
-  const { user, parents = [], grandparents = [], greatGrandparents = [] } = familyData;
-
-  // Group grandparents by their parent
-  const getGrandparentsByParent = (parentId) => {
-    return grandparents.filter(gp => gp.parentId === parentId);
-  };
-
   // Mouse/Touch event handlers for dragging
   const handleMouseDown = (e) => {
-    if (e.target.closest('.family-card')) return; // Don't drag when clicking cards
+    if (e.target.closest('.family-card')) return;
     setIsDragging(true);
     setStartPos({
       x: e.clientX - translate.x,
@@ -43,16 +27,14 @@ const FamilyTree = ({ familyData }) => {
       y: e.clientY - startPos.y
     };
     setTranslate(newTranslate);
-    
-    // Show reset button if moved from origin
     if (Math.abs(newTranslate.x) > 10 || Math.abs(newTranslate.y) > 10) {
       setShowResetButton(true);
     }
   }, [isDragging, startPos]);
 
-  const handleMouseUp = () => {
+  const handleMouseUp = useCallback(() => {
     setIsDragging(false);
-  };
+  }, []);
 
   const handleTouchStart = (e) => {
     if (e.target.closest('.family-card')) return;
@@ -72,26 +54,14 @@ const FamilyTree = ({ familyData }) => {
       y: touch.clientY - startPos.y
     };
     setTranslate(newTranslate);
-    
     if (Math.abs(newTranslate.x) > 10 || Math.abs(newTranslate.y) > 10) {
       setShowResetButton(true);
     }
   }, [isDragging, startPos]);
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
-  };
-
-  // Wheel zoom
-  const handleWheel = (e) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    const newScale = Math.min(Math.max(scale + delta, 0.5), 2);
-    setScale(newScale);
-    if (newScale !== 1) {
-      setShowResetButton(true);
-    }
-  };
+  }, []);
 
   // Reset view
   const resetView = () => {
@@ -103,6 +73,13 @@ const FamilyTree = ({ familyData }) => {
   useEffect(() => {
     const container = containerRef.current;
     if (!container) return;
+
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setScale(prev => Math.min(Math.max(prev + delta, 0.5), 2));
+      setShowResetButton(true);
+    };
 
     container.addEventListener('wheel', handleWheel, { passive: false });
     window.addEventListener('mousemove', handleMouseMove);
@@ -117,7 +94,23 @@ const FamilyTree = ({ familyData }) => {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleMouseMove, handleTouchMove]);
+  }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
+
+  // Check if we have family data
+  if (!familyData) {
+    return (
+        <div className="tree-empty">
+          <p>No family data available. Add family members to build your medical tree.</p>
+        </div>
+    );
+  }
+
+  const { user, parents = [], grandparents = [], greatGrandparents = [] } = familyData;
+
+  // Group grandparents by their parent
+  const getGrandparentsByParent = (parentId) => {
+    return grandparents.filter(gp => gp.parentId === parentId);
+  };
 
   return (
     <div 
