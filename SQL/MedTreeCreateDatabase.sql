@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS `medtree`.`Person` (
   `LastName` VARCHAR(100) NOT NULL,
   `IsDeceased` TINYINT(1) NOT NULL,
   `DateOfBirth` DATE NOT NULL,
-  `Gender` VARCHAR(255) NULL,
+  `GenderIdentity` VARCHAR(255) NULL,
+  `GenderAssignedAtBirth` VARCHAR(255) NULL,
   PRIMARY KEY (`ID`))
 ENGINE = InnoDB;
 

@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, family, medical
+from routes import auth, family, medical, account
 
 app = FastAPI(title="MedTree API")
 
@@ -19,6 +19,7 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(family.router)
 app.include_router(medical.router)
+app.include_router(account.router)
 
 # Health Check
 app.get("/health")

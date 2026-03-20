@@ -52,7 +52,8 @@ const FamilyCard = ({ member, onUpdate }) => {
     <div className="card-content">
       {member.info.age && <p><strong>Age:</strong> {member.info.age}</p>}
       {member.info.dob && <p><strong>DOB:</strong> {member.info.dob}</p>}
-      {member.info.sex && <p><strong>Sex:</strong> {member.info.sex}</p>}
+      {member.info.genderIdentity && <p><strong>Gender Identity:</strong> {member.info.genderIdentity}</p>}
+      {member.info.genderAssignedAtBirth && <p><strong>Assigned at Birth:</strong> {member.info.genderAssignedAtBirth}</p>}
       {member.type !== 'user' && member.info.alive !== undefined && (
         <p>
           <strong>Alive:</strong> {member.info.alive ? 'Yes' : 

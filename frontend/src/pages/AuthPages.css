@@ -49,6 +49,7 @@
 
 .form-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 1rem;
 }
 
@@ -199,6 +200,49 @@
 .demo-credentials p:first-child {
   color: var(--user-primary);
   margin-bottom: 0.5rem;
+}
+
+/* Password strength positioning */
+.pw-input-wrap {
+  width: 55%;
+  display: flex;
+  flex-direction: column;
+}
+
+.pw-input-wrap .edit-input {
+  width: 100%;
+}
+
+.pw-attached {
+  border-radius: 8px 8px 0 0 !important;
+  border-bottom-color: transparent !important;
+}
+
+.pw-input-wrap .pw-requirements {
+  border-radius: 0 0 8px 8px;
+}
+
+/* Ensure PasswordInput fills auth form groups */
+.auth-form .pw-visibility-wrap input {
+  padding: 0.875rem 2.75rem 0.875rem 1rem;
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 1rem;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  transition: all var(--transition-fast);
+  width: 100%;
+}
+
+.auth-form .pw-visibility-wrap input:focus {
+  outline: none;
+  border-color: var(--user-primary);
+  box-shadow: 0 0 0 3px rgba(0, 184, 230, 0.1);
+}
+
+.auth-form .pw-visibility-wrap input.pw-attached {
+  border-radius: 10px 10px 0 0;
+  border-bottom-color: transparent;
 }
 
 /* Mobile responsive */

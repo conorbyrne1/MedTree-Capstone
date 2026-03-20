@@ -75,7 +75,8 @@ def build_family_member(row: dict, member_type: str, db: Session, parent_id: str
     info = PersonInfoSchema(
         age=age,
         dob=dob_str,
-        sex=row["Gender"],
+        genderIdentity=row["GenderIdentity"],
+        genderAssignedAtBirth=row["GenderAssignedAtBirth"],
         alive=None if member_type == "user" else not is_deceased
     )
 
@@ -206,15 +207,16 @@ def add_family_member(
 
     # Insert new Person
     result = db.execute(text("""
-                             INSERT INTO Person (FirstName, MiddleName, LastName, IsDeceased, DateOfBirth, Gender)
-                             VALUES (:first, :middle, :last, :deceased, :dob, :gender)
+                             INSERT INTO Person (FirstName, MiddleName, LastName, IsDeceased, DateOfBirth, GenderIdentity, GenderAssignedAtBirth)
+                             VALUES (:first, :middle, :last, :deceased, :dob, :gender_identity, :gender_assigned)
                              """), {
                             "first": body.firstName,
                             "middle": body.middleName,
                             "last": body.lastName,
                             "deceased": 1 if body.isDeceased else 0,
                             "dob": dob,
-                            "gender": body.gender
+                            "gender_identity": body.genderIdentity,
+                            "gender_assigned": body.genderAssignedAtBirth
                         })
     db.flush()
     new_person_id = result.lastrowid
