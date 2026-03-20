@@ -23,7 +23,7 @@ const FamilyTreePage = () => {
           headers: { Authorization: `Bearer ${token}` }
         });
         const data = await res.json();
-        if (res.status !== 401) {
+        if (res.status === 401) {
           logout();
           navigate('/login');
           return;
