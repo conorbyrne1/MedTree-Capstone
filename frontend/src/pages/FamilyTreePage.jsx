@@ -42,7 +42,7 @@ const FamilyTreePage = () => {
       loadFamilyTree();
   }, [authLoading, loadFamilyTree]);
 
-  if (!authloading && !isAuthenticated) {
+  if (!authLoading && !isAuthenticated) {
     return <Navigate to="/login" />;
   }
 
