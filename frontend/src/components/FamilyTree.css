@@ -17,17 +17,41 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 2rem;
+  gap: 4rem;           /* vertical space between generations — connectors live here */
+  padding: 2rem 4rem;
   min-width: 100%;
   transform-origin: center center;
   transition: transform 0.1s ease-out;
+  position: relative; /* required so the SVG overlay is positioned relative to canvas */
 }
 
 .tree-container.dragging .tree-canvas {
   transition: none;
 }
 
-/* Reset view button */
+/* ── SVG connector overlay ──────────────────────────────────────────────── */
+
+/* Positioned inside the canvas so it moves with pan/zoom.
+   1×1px with overflow:visible lets lines render anywhere without
+   affecting the canvas's own layout/scrollHeight. */
+.tree-connectors {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.connector-path {
+  fill: none;
+  stroke: var(--border-color, #aaa);
+  stroke-width: 2;
+}
+
+/* ── Reset view button ──────────────────────────────────────────────────── */
+
 .reset-view-btn {
   position: absolute;
   top: 1rem;
@@ -60,7 +84,8 @@
   height: 18px;
 }
 
-/* Tree rows */
+/* ── Tree rows ──────────────────────────────────────────────────────────── */
+
 .tree-row {
   display: flex;
   justify-content: center;
@@ -68,19 +93,8 @@
   position: relative;
 }
 
-.grandparents-row {
-  margin-bottom: 0;
-}
+/* ── Tree nodes ─────────────────────────────────────────────────────────── */
 
-.parents-row {
-  gap: 12rem;
-}
-
-.user-row {
-  margin-top: 0;
-}
-
-/* Tree nodes */
 .tree-node {
   position: relative;
   display: flex;
@@ -88,24 +102,8 @@
   align-items: center;
 }
 
-/* Connector sections */
-.connector-section {
-  width: 100%;
-  max-width: 1200px;
-  height: 80px;
-  position: relative;
-}
+/* ── Empty state ────────────────────────────────────────────────────────── */
 
-.connector-svg {
-  width: 100%;
-  height: 100%;
-}
-
-.user-connector {
-  margin-bottom: 0;
-}
-
-/* Empty state */
 .tree-empty {
   display: flex;
   justify-content: center;
@@ -121,48 +119,8 @@
   max-width: 400px;
 }
 
-/* Mobile responsive */
-@media (max-width: 1200px) {
-  .tree-canvas {
-    padding: 1.5rem;
-  }
-  
-  .tree-row {
-    gap: 1.5rem;
-  }
-  
-  .parents-row {
-    gap: 6rem;
-  }
-}
+/* ── Zoom hint ──────────────────────────────────────────────────────────── */
 
-@media (max-width: 768px) {
-  .tree-container {
-    min-height: 500px;
-  }
-  
-  .tree-canvas {
-    padding: 1rem;
-    transform: scale(0.8);
-  }
-  
-  .tree-row {
-    gap: 1rem;
-  }
-  
-  .parents-row {
-    gap: 4rem;
-  }
-  
-  .reset-view-btn {
-    top: 0.5rem;
-    right: 0.5rem;
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
-  }
-}
-
-/* Zoom controls hint */
 .tree-container::after {
   content: 'Drag to pan • Scroll to zoom';
   position: absolute;
@@ -181,4 +139,39 @@
 
 .tree-container:hover::after {
   opacity: 1;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+
+@media (max-width: 1200px) {
+  .tree-canvas {
+    gap: 3rem;
+    padding: 1.5rem 2rem;
+  }
+
+  .tree-row {
+    gap: 1.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .tree-container {
+    min-height: 500px;
+  }
+
+  .tree-canvas {
+    gap: 2.5rem;
+    padding: 1rem;
+  }
+
+  .tree-row {
+    gap: 1rem;
+  }
+
+  .reset-view-btn {
+    top: 0.5rem;
+    right: 0.5rem;
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+  }
 }
