@@ -39,10 +39,8 @@ const AddFamilyMemberPage = () => {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Failed to load family tree.');
-                if (data.success) {
-                    setParents(data.data.parents || []);
-                    setGrandparents(data.data.grandparents || []);
-                }
+                setParents(data.parents || []);
+                setGrandparents(data.grandparents || []);
             } catch (err) {
                 console.error('Failed to load family tree:', err);
             } finally {
