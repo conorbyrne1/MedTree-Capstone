@@ -3,66 +3,28 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AddMedicalPage.css';
 
-// Defines every supported relationship type.
-// To add a new one, add an entry here — no other changes needed.
-//
-// relationship:    human-readable label, sent to the API and used as FamilyMemberResponse.type
-// relationshipType: the TypeName stored in PersonRelationshipTypes ("parent" or "sibling")
-// relatedToPool:  which array from the tree response to use for the "Related To" dropdown;
-//                 null means the new person is related directly to the logged-in user
-// relatedToLabel: helper text shown above the "Related To" dropdown
-const RELATIONSHIP_CONFIG = [
-    {
-        relationship: 'parent',
-        relationshipType: 'parent',
-        relatedToPool: null,
-        label: 'Parent',
-    },
-    {
-        relationship: 'sibling',
-        relationshipType: 'sibling',
-        relatedToPool: null,
-        label: 'Sibling',
-    },
-    {
-        relationship: 'grandparent',
-        relationshipType: 'parent',
-        relatedToPool: 'parents',
-        label: 'Grandparent',
-        relatedToLabel: 'Their child (your parent)',
-    },
-    {
-        relationship: 'aunt/uncle',
-        relationshipType: 'sibling',
-        relatedToPool: 'parents',
-        label: 'Aunt / Uncle',
-        relatedToLabel: 'Their sibling (your parent)',
-    },
-    {
-        relationship: 'great-grandparent',
-        relationshipType: 'parent',
-        relatedToPool: 'grandparents',
-        label: 'Great-Grandparent',
-        relatedToLabel: 'Their child (your grandparent)',
-    },
-    {
-        relationship: 'great-aunt/uncle',
-        relationshipType: 'sibling',
-        relatedToPool: 'grandparents',
-        label: 'Great-Aunt / Uncle',
-        relatedToLabel: 'Their sibling (your grandparent)',
-    },
-    {
-        relationship: 'great-great-grandparent',
-        relationshipType: 'parent',
-        relatedToPool: 'greatGrandparents',
-        label: 'Great-Great-Grandparent',
-        relatedToLabel: 'Their child (your great-grandparent)',
-    },
+// The two structural types stored in PersonRelationshipTypes.
+// These are what the tree traversal queries — keep this list small and semantic.
+// Display labels ("grandparent", "aunt/uncle", etc.) are derived automatically
+// by the tree GET endpoint based on traversal depth, not stored here.
+const STRUCTURAL_TYPES = [
+    { value: 'parent',  label: 'Parent of' },
+    { value: 'sibling', label: 'Sibling of' },
+];
+
+// Order in which tree sections are flattened into the "Related To" dropdown.
+// Each entry maps a tree response key to the label shown in the dropdown.
+const TREE_SECTIONS = [
+    { key: 'parents',               label: 'parent' },
+    { key: 'siblings',              label: 'sibling' },
+    { key: 'grandparents',          label: 'grandparent' },
+    { key: 'auntsUncles',           label: 'aunt/uncle' },
+    { key: 'greatGrandparents',     label: 'great-grandparent' },
+    { key: 'greatGreatGrandparents',label: 'great-great-grandparent' },
 ];
 
 const EMPTY_FORM = {
-    relationship: 'parent',
+    structuralType: 'parent',
     relatedToId: '',
     firstName: '',
     middleName: '',
@@ -83,7 +45,8 @@ const AddFamilyMemberPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
-    const [treeData, setTreeData] = useState({ parents: [], grandparents: [], greatGrandparents: [] });
+    // Flat list of every person already in the tree, used for "Related To" dropdown.
+    const [relatedToOptions, setRelatedToOptions] = useState([]);
     const [loadingTree, setLoadingTree] = useState(true);
 
     useEffect(() => {
@@ -96,11 +59,16 @@ const AddFamilyMemberPage = () => {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Failed to load family tree.');
-                setTreeData({
-                    parents: data.parents || [],
-                    grandparents: data.grandparents || [],
-                    greatGrandparents: data.greatGrandparents || [],
-                });
+
+                // Flatten every section into one list so any person can be selected,
+                // regardless of how deep in the tree they are.
+                const flat = TREE_SECTIONS.flatMap(({ key, label }) =>
+                    (data[key] ?? []).map(m => ({
+                        id: m.id,
+                        name: `${m.name} (your ${label})`,
+                    }))
+                );
+                setRelatedToOptions(flat);
             } catch (err) {
                 console.error('Failed to load family tree:', err);
             } finally {
@@ -116,18 +84,8 @@ const AddFamilyMemberPage = () => {
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
-        setForm(prev => ({
-            ...prev,
-            [name]: type === 'checkbox' ? checked : value,
-            // Reset relatedToId whenever the relationship type changes
-            ...(name === 'relationship' ? { relatedToId: '' } : {}),
-        }));
+        setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
     };
-
-    const activeConfig = RELATIONSHIP_CONFIG.find(c => c.relationship === form.relationship);
-    const relatedToOptions = activeConfig?.relatedToPool
-        ? treeData[activeConfig.relatedToPool] ?? []
-        : [];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -135,9 +93,12 @@ const AddFamilyMemberPage = () => {
         setError('');
 
         const payload = {
-            relationship: activeConfig.relationship,
-            relationshipType: activeConfig.relationshipType,
-            relatedToId: activeConfig.relatedToPool ? form.relatedToId : undefined,
+            // Both fields use the structural type; the tree GET endpoint derives
+            // the display label (grandparent, aunt/uncle, etc.) from traversal depth.
+            relationship: form.structuralType,
+            relationshipType: form.structuralType,
+            // Empty string → backend uses the logged-in user as PersonOneID.
+            relatedToId: form.relatedToId || undefined,
             firstName: form.firstName,
             lastName: form.lastName,
             middleName: form.middleName || undefined,
@@ -200,43 +161,39 @@ const AddFamilyMemberPage = () => {
                     <form onSubmit={handleSubmit} className="medical-form">
 
                         <div className="form-group">
-                            <label htmlFor="relationship">Relationship</label>
+                            <label htmlFor="structuralType">This person is a</label>
                             <select
-                                id="relationship"
-                                name="relationship"
-                                value={form.relationship}
+                                id="structuralType"
+                                name="structuralType"
+                                value={form.structuralType}
                                 onChange={handleChange}
                                 required
                             >
-                                {RELATIONSHIP_CONFIG.map(c => (
-                                    <option key={c.relationship} value={c.relationship}>
-                                        {c.label}
-                                    </option>
+                                {STRUCTURAL_TYPES.map(t => (
+                                    <option key={t.value} value={t.value}>{t.label}</option>
                                 ))}
                             </select>
                         </div>
 
-                        {activeConfig?.relatedToPool && (
-                            <div className="form-group">
-                                <label htmlFor="relatedToId">{activeConfig.relatedToLabel}</label>
-                                {loadingTree ? (
-                                    <span className="loading-spinner" />
-                                ) : (
-                                    <select
-                                        id="relatedToId"
-                                        name="relatedToId"
-                                        value={form.relatedToId}
-                                        onChange={handleChange}
-                                        required
-                                    >
-                                        <option value="">Select person</option>
-                                        {relatedToOptions.map(m => (
-                                            <option key={m.id} value={m.id}>{m.name}</option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
-                        )}
+                        <div className="form-group">
+                            <label htmlFor="relatedToId">Related to</label>
+                            {loadingTree ? (
+                                <span className="loading-spinner" />
+                            ) : (
+                                <select
+                                    id="relatedToId"
+                                    name="relatedToId"
+                                    value={form.relatedToId}
+                                    onChange={handleChange}
+                                    required
+                                >
+                                    <option value="">Myself (you)</option>
+                                    {relatedToOptions.map(m => (
+                                        <option key={m.id} value={m.id}>{m.name}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
 
                         <div className="form-group">
                             <label htmlFor="firstName">First Name</label>
