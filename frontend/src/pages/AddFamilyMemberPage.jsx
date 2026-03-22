@@ -3,8 +3,67 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AddMedicalPage.css';
 
+// Defines every supported relationship type.
+// To add a new one, add an entry here — no other changes needed.
+//
+// relationship:    human-readable label, sent to the API and used as FamilyMemberResponse.type
+// relationshipType: the TypeName stored in PersonRelationshipTypes ("parent" or "sibling")
+// relatedToPool:  which array from the tree response to use for the "Related To" dropdown;
+//                 null means the new person is related directly to the logged-in user
+// relatedToLabel: helper text shown above the "Related To" dropdown
+const RELATIONSHIP_CONFIG = [
+    {
+        relationship: 'parent',
+        relationshipType: 'parent',
+        relatedToPool: null,
+        label: 'Parent',
+    },
+    {
+        relationship: 'sibling',
+        relationshipType: 'sibling',
+        relatedToPool: null,
+        label: 'Sibling',
+    },
+    {
+        relationship: 'grandparent',
+        relationshipType: 'parent',
+        relatedToPool: 'parents',
+        label: 'Grandparent',
+        relatedToLabel: 'Their child (your parent)',
+    },
+    {
+        relationship: 'aunt/uncle',
+        relationshipType: 'sibling',
+        relatedToPool: 'parents',
+        label: 'Aunt / Uncle',
+        relatedToLabel: 'Their sibling (your parent)',
+    },
+    {
+        relationship: 'great-grandparent',
+        relationshipType: 'parent',
+        relatedToPool: 'grandparents',
+        label: 'Great-Grandparent',
+        relatedToLabel: 'Their child (your grandparent)',
+    },
+    {
+        relationship: 'great-aunt/uncle',
+        relationshipType: 'sibling',
+        relatedToPool: 'grandparents',
+        label: 'Great-Aunt / Uncle',
+        relatedToLabel: 'Their sibling (your grandparent)',
+    },
+    {
+        relationship: 'great-great-grandparent',
+        relationshipType: 'parent',
+        relatedToPool: 'greatGrandparents',
+        label: 'Great-Great-Grandparent',
+        relatedToLabel: 'Their child (your great-grandparent)',
+    },
+];
+
 const EMPTY_FORM = {
-    type: 'parent',
+    relationship: 'parent',
+    relatedToId: '',
     firstName: '',
     middleName: '',
     lastName: '',
@@ -15,7 +74,6 @@ const EMPTY_FORM = {
     deathDate: '',
     deathReason: '',
     deathNotes: '',
-    parentId: '',
 };
 
 const AddFamilyMemberPage = () => {
@@ -25,8 +83,7 @@ const AddFamilyMemberPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [success, setSuccess] = useState(false);
     const [error, setError] = useState('');
-    const [parents, setParents] = useState([]);
-    const [grandparents, setGrandparents] = useState([]);
+    const [treeData, setTreeData] = useState({ parents: [], grandparents: [], greatGrandparents: [] });
     const [loadingTree, setLoadingTree] = useState(true);
 
     useEffect(() => {
@@ -39,8 +96,11 @@ const AddFamilyMemberPage = () => {
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.detail || 'Failed to load family tree.');
-                setParents(data.parents || []);
-                setGrandparents(data.grandparents || []);
+                setTreeData({
+                    parents: data.parents || [],
+                    grandparents: data.grandparents || [],
+                    greatGrandparents: data.greatGrandparents || [],
+                });
             } catch (err) {
                 console.error('Failed to load family tree:', err);
             } finally {
@@ -59,12 +119,15 @@ const AddFamilyMemberPage = () => {
         setForm(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? checked : value,
-            // Reset parentId when type changes
-            ...(name === 'type' ? { parentId: '' } : {}),
+            // Reset relatedToId whenever the relationship type changes
+            ...(name === 'relationship' ? { relatedToId: '' } : {}),
         }));
     };
 
-    const parentOptions = form.type === 'grandparent' ? parents : grandparents;
+    const activeConfig = RELATIONSHIP_CONFIG.find(c => c.relationship === form.relationship);
+    const relatedToOptions = activeConfig?.relatedToPool
+        ? treeData[activeConfig.relatedToPool] ?? []
+        : [];
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -72,7 +135,9 @@ const AddFamilyMemberPage = () => {
         setError('');
 
         const payload = {
-            type: form.type,
+            relationship: activeConfig.relationship,
+            relationshipType: activeConfig.relationshipType,
+            relatedToId: activeConfig.relatedToPool ? form.relatedToId : undefined,
             firstName: form.firstName,
             lastName: form.lastName,
             middleName: form.middleName || undefined,
@@ -83,7 +148,6 @@ const AddFamilyMemberPage = () => {
             deathDate: form.isDeceased && form.deathDate ? form.deathDate : undefined,
             deathReason: form.isDeceased && form.deathReason ? form.deathReason : undefined,
             deathNotes: form.isDeceased && form.deathNotes ? form.deathNotes : undefined,
-            parentId: form.type !== 'parent' ? form.parentId : undefined,
         };
 
         try {
@@ -109,9 +173,6 @@ const AddFamilyMemberPage = () => {
             setSubmitting(false);
         }
     };
-
-    const needsParent = form.type === 'grandparent' || form.type === 'great-grandparent';
-    const parentLabel = form.type === 'grandparent' ? 'Parent' : 'Grandparent';
 
     return (
         <div className="add-medical-page">
@@ -139,35 +200,37 @@ const AddFamilyMemberPage = () => {
                     <form onSubmit={handleSubmit} className="medical-form">
 
                         <div className="form-group">
-                            <label htmlFor="type">Relationship Type</label>
+                            <label htmlFor="relationship">Relationship</label>
                             <select
-                                id="type"
-                                name="type"
-                                value={form.type}
+                                id="relationship"
+                                name="relationship"
+                                value={form.relationship}
                                 onChange={handleChange}
                                 required
                             >
-                                <option value="parent">Parent</option>
-                                <option value="grandparent">Grandparent</option>
-                                <option value="great-grandparent">Great-Grandparent</option>
+                                {RELATIONSHIP_CONFIG.map(c => (
+                                    <option key={c.relationship} value={c.relationship}>
+                                        {c.label}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
-                        {needsParent && (
+                        {activeConfig?.relatedToPool && (
                             <div className="form-group">
-                                <label htmlFor="parentId">{parentLabel}</label>
+                                <label htmlFor="relatedToId">{activeConfig.relatedToLabel}</label>
                                 {loadingTree ? (
                                     <span className="loading-spinner" />
                                 ) : (
                                     <select
-                                        id="parentId"
-                                        name="parentId"
-                                        value={form.parentId}
+                                        id="relatedToId"
+                                        name="relatedToId"
+                                        value={form.relatedToId}
                                         onChange={handleChange}
                                         required
                                     >
-                                        <option value="">Select {parentLabel.toLowerCase()}</option>
-                                        {parentOptions.map(m => (
+                                        <option value="">Select person</option>
+                                        {relatedToOptions.map(m => (
                                             <option key={m.id} value={m.id}>{m.name}</option>
                                         ))}
                                     </select>
@@ -189,7 +252,9 @@ const AddFamilyMemberPage = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="middleName">Middle Name <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                            <label htmlFor="middleName">
+                                Middle Name <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                            </label>
                             <input
                                 type="text"
                                 id="middleName"
@@ -214,7 +279,9 @@ const AddFamilyMemberPage = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="dob">Date of Birth <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                            <label htmlFor="dob">
+                                Date of Birth <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                            </label>
                             <input
                                 type="date"
                                 id="dob"
@@ -225,7 +292,9 @@ const AddFamilyMemberPage = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="genderIdentity">Gender Identity <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                            <label htmlFor="genderIdentity">
+                                Gender Identity <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                            </label>
                             <input
                                 type="text"
                                 id="genderIdentity"
@@ -237,7 +306,9 @@ const AddFamilyMemberPage = () => {
                         </div>
 
                         <div className="form-group">
-                            <label htmlFor="genderAssignedAtBirth">Gender Assigned at Birth <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                            <label htmlFor="genderAssignedAtBirth">
+                                Gender Assigned at Birth <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                            </label>
                             <input
                                 type="text"
                                 id="genderAssignedAtBirth"
@@ -248,22 +319,24 @@ const AddFamilyMemberPage = () => {
                             />
                         </div>
 
-                        <div className="form-group" style={{flexDirection:'row', alignItems:'center', gap:'0.5rem'}}>
+                        <div className="form-group" style={{ flexDirection: 'row', alignItems: 'center', gap: '0.5rem' }}>
                             <input
                                 type="checkbox"
                                 id="isDeceased"
                                 name="isDeceased"
                                 checked={form.isDeceased}
                                 onChange={handleChange}
-                                style={{width:'auto', margin:0}}
+                                style={{ width: 'auto', margin: 0 }}
                             />
-                            <label htmlFor="isDeceased" style={{marginBottom:0}}>Deceased</label>
+                            <label htmlFor="isDeceased" style={{ marginBottom: 0 }}>Deceased</label>
                         </div>
 
                         {form.isDeceased && (
                             <>
                                 <div className="form-group">
-                                    <label htmlFor="deathDate">Date of Death <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                                    <label htmlFor="deathDate">
+                                        Date of Death <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                                    </label>
                                     <input
                                         type="date"
                                         id="deathDate"
@@ -274,7 +347,9 @@ const AddFamilyMemberPage = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label htmlFor="deathReason">Cause of Death <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                                    <label htmlFor="deathReason">
+                                        Cause of Death <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                                    </label>
                                     <input
                                         type="text"
                                         id="deathReason"
@@ -286,7 +361,9 @@ const AddFamilyMemberPage = () => {
                                 </div>
 
                                 <div className="form-group">
-                                    <label htmlFor="deathNotes">Death Notes <span style={{fontWeight:'normal',opacity:0.6}}>(optional)</span></label>
+                                    <label htmlFor="deathNotes">
+                                        Death Notes <span style={{ fontWeight: 'normal', opacity: 0.6 }}>(optional)</span>
+                                    </label>
                                     <input
                                         type="text"
                                         id="deathNotes"

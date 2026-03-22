@@ -7,22 +7,29 @@ const FamilyCard = ({ member, onUpdate }) => {
   const getTypeClass = () => {
     switch (member.type) {
       case 'user': return 'card-user';
-      case 'parent': return 'card-parent';
-      case 'grandparent': return 'card-grandparent';
-      case 'great-grandparent': return 'card-grandparent';
-      default: return 'card-user';
+      case 'parent':
+      case 'sibling': return 'card-parent';
+      case 'grandparent':
+      case 'aunt/uncle':
+      case 'great-grandparent':
+      case 'great-aunt/uncle':
+      case 'great-great-grandparent': return 'card-grandparent';
+      default: return 'card-parent';
     }
   };
 
-  const getTypeLabel = () => {
-    switch (member.type) {
-      case 'user': return 'User Info:';
-      case 'parent': return 'Parent Info:';
-      case 'grandparent': return 'Grandparent Info:';
-      case 'great-grandparent': return 'Great Grandparent Info:';
-      default: return 'Info:';
-    }
+  const TYPE_LABELS = {
+    user: 'User Info:',
+    parent: 'Parent Info:',
+    sibling: 'Sibling Info:',
+    grandparent: 'Grandparent Info:',
+    'aunt/uncle': 'Aunt / Uncle Info:',
+    'great-grandparent': 'Great-Grandparent Info:',
+    'great-aunt/uncle': 'Great-Aunt / Uncle Info:',
+    'great-great-grandparent': 'Great-Great-Grandparent Info:',
   };
+
+  const getTypeLabel = () => TYPE_LABELS[member.type] ?? `${member.type} Info:`;
 
   const getSections = () => {
     const sections = [
