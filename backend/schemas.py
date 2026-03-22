@@ -73,13 +73,38 @@ class FamilyMemberResponse(BaseModel):
 class FamilyTreeResponse(BaseModel):
     user: FamilyMemberResponse
     parents: list[FamilyMemberResponse] = []
+    siblings: list[FamilyMemberResponse] = []
     grandparents: list[FamilyMemberResponse] = []
+    auntsUncles: list[FamilyMemberResponse] = []
     greatGrandparents: list[FamilyMemberResponse] = []
+    greatGreatGrandparents: list[FamilyMemberResponse] = []
 
-# Adding Family Members
+# # Adding Family Members
+# class AddFamilyMemberRequest(BaseModel):
+#     # 'parent', 'grandparent', 'great-grandparent'
+#     type: str
+#     firstName: str
+#     lastName: str
+#     middleName: Optional[str] = None
+#     genderIdentity: Optional[str] = None
+#     genderAssignedAtBirth: Optional[str] = None
+#     dob: Optional[str] = None
+#     isDeceased: bool = False
+#     deathDate: Optional[str] = None
+#     deathReason: Optional[str] = None
+#     deathNotes: Optional[str] = None
+#     # for grandparents: the 'p{id}' string of their child
+#     parentId: Optional[str] = None
+
 class AddFamilyMemberRequest(BaseModel):
-    # 'parent', 'grandparent', 'great-grandparent'
-    type: str
+    # Human-readable label used as FamilyMemberResponse.type in the response
+    # e.g. "parent", "sibling", "grandparent", "aunt/uncle", "great-grandparent"
+    relationship: str
+    # The TypeName stored in PersonRelationshipTypes: "parent", "sibling", etc.
+    relationshipType: str
+    # Prefixed person ID (e.g. "p5", "g3") this new member is related to.
+    # None means related directly to the logged-in user.
+    relatedToId: Optional[str] = None
     firstName: str
     lastName: str
     middleName: Optional[str] = None
@@ -90,8 +115,6 @@ class AddFamilyMemberRequest(BaseModel):
     deathDate: Optional[str] = None
     deathReason: Optional[str] = None
     deathNotes: Optional[str] = None
-    # for grandparents: the 'p{id}' string of their child
-    parentId: Optional[str] = None
 
 # Medical Conditions
 class AddConditionRequest(BaseModel):
