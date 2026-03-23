@@ -8,6 +8,7 @@ const AddProfessionalPage = () => {
   const navigate = useNavigate();
   const [submitting, setSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [error, setError] = useState('');
 
   const [form, setForm] = useState({
     name: '',
@@ -29,13 +30,27 @@ const AddProfessionalPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSubmitting(true);
-    
+    setError('');
+
     try {
-      // Professional endpoint not yet implemented — placeholder for future use
-      console.warn('Add professional not yet implemented');
-      setSubmitting(false);
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch('http://localhost:8000/professionals/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(form),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to add professional.');
+
+      setSuccess(true);
+      setForm({ name: '', specialty: '', phone: '', email: '', address: '' });
+      setTimeout(() => setSuccess(false), 3000);
     } catch (err) {
-      console.error('Failed to add professional:', err);
+      setError(err.message);
     } finally {
       setSubmitting(false);
     }
@@ -57,6 +72,10 @@ const AddProfessionalPage = () => {
             </svg>
             Medical professional added successfully!
           </div>
+        )}
+
+        {error && (
+          <div className="error-message">{error}</div>
         )}
 
         <div className="form-card">

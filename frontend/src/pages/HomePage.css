@@ -189,6 +189,10 @@
   box-shadow: var(--shadow-lg);
 }
 
+.action-card.tree:hover {
+  border-color: var(--tree-primary);
+}
+
 .action-card.primary:hover {
   border-color: var(--user-primary);
 }
@@ -209,6 +213,10 @@
   align-items: center;
   justify-content: center;
   border-radius: 20px;
+}
+
+.action-card.tree .card-icon {
+  background: linear-gradient(135deg, var(--tree-primary), var(--tree-secondary));
 }
 
 .action-card.primary .card-icon {

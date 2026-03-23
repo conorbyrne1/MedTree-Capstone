@@ -10,11 +10,12 @@ import AboutPage from './pages/AboutPage';
 import AccountPage from './pages/AccountPage';
 import AddMedicalPage from './pages/AddMedicalPage';
 import AddProfessionalPage from './pages/AddProfessionalPage';
+import AddFamilyMemberPage from "./pages/AddFamilyMemberPage";
 
 const App = () => {
   return (
     <AuthProvider>
-      <Router>
+      <Router basename="/MedTree-Capstone">
         <div className="app">
           <Header />
           <main>
@@ -31,6 +32,7 @@ const App = () => {
               <Route path="/account" element={<AccountPage />} />
               <Route path="/add-medical" element={<AddMedicalPage />} />
               <Route path="/add-professional" element={<AddProfessionalPage />} />
+              <Route path="/add-family" element={<AddFamilyMemberPage />} />
             </Routes>
           </main>
         </div>
