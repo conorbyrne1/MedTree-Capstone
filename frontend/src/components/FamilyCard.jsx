@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './FamilyCard.css';
 
 const FamilyCard = ({ member, onUpdate }) => {
-  const [expandedSection, setExpandedSection] = useState('info');
+  const [expandedSection, setExpandedSection] = useState(null);
   
   const getTypeClass = () => {
     switch (member.type) {
