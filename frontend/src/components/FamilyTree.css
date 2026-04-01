@@ -274,6 +274,7 @@
 .tree-row {
   display: flex;
   justify-content: center;
+  align-items: flex-start;  /* each node is only as tall as its card content */
   gap: 3rem;
   position: relative;
 }
