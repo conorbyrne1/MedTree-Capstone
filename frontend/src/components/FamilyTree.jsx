@@ -333,20 +333,25 @@ const FamilyTree = ({ familyData }) => {
     const container = containerRef.current;
     if (!canvas || !container) return;
 
-    const canvasRect = canvas.getBoundingClientRect();
-
     // Returns the center-bottom and center-top of a node in canvas-local coords.
-    // Dividing by `scale` converts from screen-space back to canvas-local space,
-    // which is what the SVG (rendered inside the canvas) uses for coordinates.
+    // Uses offsetLeft/offsetTop traversal instead of getBoundingClientRect so that
+    // measurements are in the natural (pre-CSS-transform) layout space — completely
+    // independent of scale, pan, and any in-progress CSS transitions.
     const getPos = (id) => {
-      const el = nodeRefs.current[id];
-      if (!el) return null;
-      const r = el.getBoundingClientRect();
-      return {
-        centerX: (r.left + r.width  / 2 - canvasRect.left) / scale,
-        topY:    (r.top             - canvasRect.top)  / scale,
-        bottomY: (r.bottom          - canvasRect.top)  / scale,
-      };
+    const el = nodeRefs.current[id];
+    if (!el) return null;
+    let relTop = 0, relLeft = 0;
+    let curr = el;
+    while (curr && curr !== canvas) {
+      relTop  += curr.offsetTop;
+      relLeft += curr.offsetLeft;
+      curr = curr.offsetParent;
+    }
+    return {
+      centerX: relLeft + el.offsetWidth  / 2,
+      topY:    relTop,
+      bottomY: relTop  + el.offsetHeight,
+    };
     };
 
     // Elbow path: drops vertically from source, goes horizontal at midpoint,
@@ -415,7 +420,7 @@ const FamilyTree = ({ familyData }) => {
         hasInitialized.current = true;
       }
     }
-  }, [familyData, scale]);
+  }, [familyData]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 

@@ -231,8 +231,8 @@
 
 .connector-path {
   fill: none;
-  stroke: var(--border-color, #aaa);
-  stroke-width: 2;
+  stroke: var(--text-secondary, #666);
+  stroke-width: 2.5;
 }
 
 /* ── Reset view button ──────────────────────────────────────────────────── */
