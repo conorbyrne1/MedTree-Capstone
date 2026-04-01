@@ -379,11 +379,12 @@ const FamilyTree = ({ familyData }) => {
         ];
       }
 
-      // Shared junction: midpoint between the tallest source and the destination.
-      // Using the tallest source bottom as the anchor keeps all lines co-planar
-      // while the midpoint placement gives visual breathing room (not flush with cards).
+      // Shared junction: fixed offset below the tallest source card.
+      // This keeps the bar a consistent distance from the parent row regardless
+      // of how far away the child is.  Shorter cards get a longer vertical stem
+      // down to the same bar level; the bar is never flush with any card.
       const maxBottomY = Math.max(...srcs.map(s => s.bottomY));
-      const junctionY  = (maxBottomY + dst.topY) / 2;
+      const junctionY  = maxBottomY + 40;
       const leftX      = Math.min(...srcs.map(s => s.centerX));
       const rightX     = Math.max(...srcs.map(s => s.centerX));
       const midX       = (leftX + rightX) / 2;
