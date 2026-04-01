@@ -379,12 +379,15 @@ const FamilyTree = ({ familyData }) => {
         ];
       }
 
-      // Shared junction: the lowest bottom edge among all sources
-      const junctionY = Math.max(...srcs.map(s => s.bottomY));
-      const leftX     = Math.min(...srcs.map(s => s.centerX));
-      const rightX    = Math.max(...srcs.map(s => s.centerX));
-      const midX      = (leftX + rightX) / 2;
-      const mid2      = (junctionY + dst.topY) / 2;
+      // Shared junction: midpoint between the tallest source and the destination.
+      // Using the tallest source bottom as the anchor keeps all lines co-planar
+      // while the midpoint placement gives visual breathing room (not flush with cards).
+      const maxBottomY = Math.max(...srcs.map(s => s.bottomY));
+      const junctionY  = (maxBottomY + dst.topY) / 2;
+      const leftX      = Math.min(...srcs.map(s => s.centerX));
+      const rightX     = Math.max(...srcs.map(s => s.centerX));
+      const midX       = (leftX + rightX) / 2;
+      const mid2       = (junctionY + dst.topY) / 2;
 
       const paths = [];
 
