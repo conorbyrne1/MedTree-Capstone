@@ -357,13 +357,70 @@ const FamilyTree = ({ familyData }) => {
       };
     };
 
-    // Elbow path: vertical from source, horizontal at midpoint, vertical to target.
-    const elbow = (src, dst) => {
-      const mid = (src.bottomY + dst.topY) / 2;
-      return `M ${src.centerX} ${src.bottomY} `
+    // Draw a connector from a group of source nodes to one destination.
+    //
+    // When sources have different heights (e.g. one card expanded, one collapsed)
+    // each source drops vertically to a shared junction Y (the lowest bottom edge),
+    // a horizontal bar links them all, then a single line continues to the child.
+    // This keeps the horizontal segments co-planar regardless of card height.
+    //
+    // For a single source the result is a plain elbow (vertical → horizontal → vertical).
+    const groupConnector = (srcs, dst) => {
+      if (!dst || srcs.length === 0) return [];
+
+      if (srcs.length === 1) {
+        const src = srcs[0];
+        const mid = (src.bottomY + dst.topY) / 2;
+        return [
+          `M ${src.centerX} ${src.bottomY} `
           + `L ${src.centerX} ${mid} `
           + `L ${dst.centerX} ${mid} `
-          + `L ${dst.centerX} ${dst.topY}`;
+          + `L ${dst.centerX} ${dst.topY}`,
+        ];
+      }
+
+      // Shared junction: the lowest bottom edge among all sources
+      const junctionY = Math.max(...srcs.map(s => s.bottomY));
+      const leftX     = Math.min(...srcs.map(s => s.centerX));
+      const rightX    = Math.max(...srcs.map(s => s.centerX));
+      const midX      = (leftX + rightX) / 2;
+      const mid2      = (junctionY + dst.topY) / 2;
+
+      const paths = [];
+
+      // Each source drops vertically to the shared junction line
+      srcs.forEach(src => {
+        paths.push(`M ${src.centerX} ${src.bottomY} L ${src.centerX} ${junctionY}`);
+      });
+
+      // Horizontal bar at junction
+      paths.push(`M ${leftX} ${junctionY} L ${rightX} ${junctionY}`);
+
+      // Elbow from junction midpoint down to destination
+      paths.push(
+        `M ${midX} ${junctionY} `
+        + `L ${midX} ${mid2} `
+        + `L ${dst.centerX} ${mid2} `
+        + `L ${dst.centerX} ${dst.topY}`,
+      );
+
+      return paths;
+    };
+
+    // Helper: group an array of members by a key and return { key → { dst, srcs[] } }
+    const groupByDest = (members, getDestId) => {
+      const map = {};
+      members.forEach(m => {
+        const destId = getDestId(m);
+        if (!destId) return;
+        const dst = getPos(destId);
+        if (!dst) return;
+        const src = getPos(m.id);
+        if (!src) return;
+        if (!map[destId]) map[destId] = { dst, srcs: [] };
+        map[destId].srcs.push(src);
+      });
+      return map;
     };
 
     const {
@@ -376,35 +433,24 @@ const FamilyTree = ({ familyData }) => {
 
     const newPaths = [];
 
-    // Parents → user
+    // Parents → user (all parents share one destination)
     if (user) {
-      parents.forEach(p => {
-        const src = getPos(p.id);
-        const dst = getPos(user.id);
-        if (src && dst) newPaths.push(elbow(src, dst));
-      });
+      const dst  = getPos(user.id);
+      const srcs = parents.map(p => getPos(p.id)).filter(Boolean);
+      groupConnector(srcs, dst).forEach(p => newPaths.push(p));
     }
 
-    // Grandparents → their parent
-    grandparents.forEach(gp => {
-      const src = getPos(gp.id);
-      const dst = gp.parentId ? getPos(gp.parentId) : null;
-      if (src && dst) newPaths.push(elbow(src, dst));
-    });
+    // Grandparents → their parent (group by parentId)
+    Object.values(groupByDest(grandparents, gp => gp.parentId))
+      .forEach(({ srcs, dst }) => groupConnector(srcs, dst).forEach(p => newPaths.push(p)));
 
     // Great-grandparents → their grandparent
-    greatGrandparents.forEach(ggp => {
-      const src = getPos(ggp.id);
-      const dst = ggp.parentId ? getPos(ggp.parentId) : null;
-      if (src && dst) newPaths.push(elbow(src, dst));
-    });
+    Object.values(groupByDest(greatGrandparents, ggp => ggp.parentId))
+      .forEach(({ srcs, dst }) => groupConnector(srcs, dst).forEach(p => newPaths.push(p)));
 
     // Great-great-grandparents → their great-grandparent
-    greatGreatGrandparents.forEach(gggp => {
-      const src = getPos(gggp.id);
-      const dst = gggp.parentId ? getPos(gggp.parentId) : null;
-      if (src && dst) newPaths.push(elbow(src, dst));
-    });
+    Object.values(groupByDest(greatGreatGrandparents, gggp => gggp.parentId))
+      .forEach(({ srcs, dst }) => groupConnector(srcs, dst).forEach(p => newPaths.push(p)));
 
     setPaths(newPaths);
   }, [familyData]);
