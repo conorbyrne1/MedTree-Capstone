@@ -321,41 +321,43 @@ const FamilyTree = ({ familyData }) => {
     };
   }, [handleMouseMove, handleMouseUp, handleTouchMove, handleTouchEnd]);
 
-  // ── Dynamic connector lines + initial scroll ──────────────────────────────
+  // ── Dynamic connector lines ────────────────────────────────────────────────
   //
-  // Runs after every layout change. All coordinates are in canvas-local space
-  // (screen coords divided by scale), which means they are scale-independent
-  // and correct at any zoom level without needing to recompute on pan/zoom.
+  // All coordinates are in canvas-local space (pre-CSS-transform layout space),
+  // so they are scale-independent and correct at any zoom level.
+  //
+  // calcPaths is a stable callback (only changes when familyData changes).
+  // It is called:
+  //   • synchronously via useLayoutEffect on mount / data change
+  //   • by a ResizeObserver on the canvas (fires during card expand/collapse transitions)
+  //   • by a window 'resize' listener (fires when viewport size changes)
 
-  useLayoutEffect(() => {
+  const calcPaths = useCallback(() => {
     if (!familyData) return;
-    const canvas    = canvasRef.current;
-    const container = containerRef.current;
-    if (!canvas || !container) return;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
 
     // Returns the center-bottom and center-top of a node in canvas-local coords.
-    // Uses offsetLeft/offsetTop traversal instead of getBoundingClientRect so that
-    // measurements are in the natural (pre-CSS-transform) layout space — completely
-    // independent of scale, pan, and any in-progress CSS transitions.
+    // Uses offsetLeft/offsetTop traversal so measurements are independent of
+    // scale, pan, and any in-progress CSS transitions.
     const getPos = (id) => {
-    const el = nodeRefs.current[id];
-    if (!el) return null;
-    let relTop = 0, relLeft = 0;
-    let curr = el;
-    while (curr && curr !== canvas) {
-      relTop  += curr.offsetTop;
-      relLeft += curr.offsetLeft;
-      curr = curr.offsetParent;
-    }
-    return {
-      centerX: relLeft + el.offsetWidth  / 2,
-      topY:    relTop,
-      bottomY: relTop  + el.offsetHeight,
-    };
+      const el = nodeRefs.current[id];
+      if (!el) return null;
+      let relTop = 0, relLeft = 0;
+      let curr = el;
+      while (curr && curr !== canvas) {
+        relTop  += curr.offsetTop;
+        relLeft += curr.offsetLeft;
+        curr = curr.offsetParent;
+      }
+      return {
+        centerX: relLeft + el.offsetWidth  / 2,
+        topY:    relTop,
+        bottomY: relTop  + el.offsetHeight,
+      };
     };
 
-    // Elbow path: drops vertically from source, goes horizontal at midpoint,
-    // then drops to target. Classic family-tree connector.
+    // Elbow path: vertical from source, horizontal at midpoint, vertical to target.
     const elbow = (src, dst) => {
       const mid = (src.bottomY + dst.topY) / 2;
       return `M ${src.centerX} ${src.bottomY} `
@@ -366,9 +368,9 @@ const FamilyTree = ({ familyData }) => {
 
     const {
       user,
-      parents           = [],
-      grandparents      = [],
-      greatGrandparents = [],
+      parents                = [],
+      grandparents           = [],
+      greatGrandparents      = [],
       greatGreatGrandparents = [],
     } = familyData;
 
@@ -383,7 +385,7 @@ const FamilyTree = ({ familyData }) => {
       });
     }
 
-    // Grandparents → their parent (parentId is the parent's prefixed ID)
+    // Grandparents → their parent
     grandparents.forEach(gp => {
       const src = getPos(gp.id);
       const dst = gp.parentId ? getPos(gp.parentId) : null;
@@ -405,22 +407,46 @@ const FamilyTree = ({ familyData }) => {
     });
 
     setPaths(newPaths);
+  }, [familyData]);
 
-    // ── Initial scroll: show user card near the bottom of the viewport ──────
-    // Only runs once per session (or after resetView clears hasInitialized).
-    if (!hasInitialized.current && user) {
-      const userEl = nodeRefs.current[user.id];
-      if (userEl) {
-        const cRect    = container.getBoundingClientRect();
-        const uRect    = userEl.getBoundingClientRect();
-        const uBottom  = uRect.bottom - cRect.top;       // distance from container top
-        const target   = cRect.height - 60;              // 60px padding from container bottom
-        const neededY  = target - uBottom;
+  // Run synchronously after layout so paths are correct on first paint.
+  // Also handles the one-time initial scroll to show the user card near bottom.
+  useLayoutEffect(() => {
+    calcPaths();
+
+    if (!hasInitialized.current && familyData?.user) {
+      const container = containerRef.current;
+      const userEl    = nodeRefs.current[familyData.user.id];
+      if (container && userEl) {
+        const cRect   = container.getBoundingClientRect();
+        const uRect   = userEl.getBoundingClientRect();
+        const uBottom = uRect.bottom - cRect.top;
+        const target  = cRect.height - 60;
+        const neededY = target - uBottom;
         if (neededY < 0) setTranslate({ x: 0, y: neededY });
         hasInitialized.current = true;
       }
     }
-  }, [familyData]);
+  }, [calcPaths, familyData]);
+
+  // Keep lines in sync with DOM size changes (card expand/collapse, window resize).
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // ResizeObserver fires whenever the canvas changes size, which happens during
+    // card expand/collapse CSS transitions — giving smooth live line updates.
+    const ro = new ResizeObserver(calcPaths);
+    ro.observe(canvas);
+
+    // Window resize can shift flex-row positions without changing the canvas size.
+    window.addEventListener('resize', calcPaths);
+
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', calcPaths);
+    };
+  }, [calcPaths]);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
