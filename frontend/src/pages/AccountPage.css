@@ -358,3 +358,114 @@
     font-size: 1.5rem;
   }
 }
+
+/* Office access section */
+.office-search-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.office-search-input {
+  flex: 1;
+  width: 100%;
+}
+
+.office-search-results {
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+}
+
+.office-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-color);
+  gap: 1rem;
+}
+
+.office-result-item:last-child {
+  border-bottom: none;
+}
+
+.office-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.office-result-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+.office-result-desc {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.office-connect-btn {
+  padding: 0.35rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--user-primary);
+  color: var(--user-primary);
+  background: transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.office-connect-btn:hover:not(:disabled) {
+  background: var(--user-primary);
+  color: white;
+}
+
+.office-connect-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.office-row {
+  align-items: flex-start;
+}
+
+.office-connected-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.office-disconnect-btn {
+  padding: 0.35rem 0.875rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid #fed7d7;
+  color: #e53e3e;
+  background: transparent;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.office-disconnect-btn:hover {
+  background: #fff5f5;
+}
+
+.office-empty-text,
+.office-loading-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  padding: 0.5rem 0;
+}

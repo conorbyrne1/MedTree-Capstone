@@ -11,6 +11,9 @@ import AccountPage from './pages/AccountPage';
 import AddMedicalPage from './pages/AddMedicalPage';
 import AddProfessionalPage from './pages/AddProfessionalPage';
 import AddFamilyMemberPage from "./pages/AddFamilyMemberPage";
+import OfficeLoginPage from './pages/OfficeLoginPage';
+import OfficeSignupPage from './pages/OfficeSignupPage';
+import OfficeDashboardPage from './pages/OfficeDashboardPage';
 
 const App = () => {
   return (
@@ -33,6 +36,11 @@ const App = () => {
               <Route path="/add-medical" element={<AddMedicalPage />} />
               <Route path="/add-professional" element={<AddProfessionalPage />} />
               <Route path="/add-family" element={<AddFamilyMemberPage />} />
+
+              {/* Office routes */}
+              <Route path="/office/login" element={<OfficeLoginPage />} />
+              <Route path="/office/signup" element={<OfficeSignupPage />} />
+              <Route path="/office/dashboard" element={<OfficeDashboardPage />} />
             </Routes>
           </main>
         </div>

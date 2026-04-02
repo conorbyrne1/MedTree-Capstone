@@ -44,6 +44,7 @@ CREATE TABLE IF NOT EXISTS `medtree`.`Account` (
   `PersonID` INT NOT NULL,
   PRIMARY KEY (`ID`),
   INDEX `_idx` (`PersonID` ASC) VISIBLE,
+  UNIQUE INDEX `Username_UNIQUE` (`Username` ASC) VISIBLE,
   CONSTRAINT ``
     FOREIGN KEY (`PersonID`)
     REFERENCES `medtree`.`Person` (`ID`)
@@ -59,7 +60,12 @@ DROP TABLE IF EXISTS `medtree`.`MedicalOffice` ;
 
 CREATE TABLE IF NOT EXISTS `medtree`.`MedicalOffice` (
   `ID` INT NOT NULL AUTO_INCREMENT,
-  PRIMARY KEY (`ID`))
+  `Username` VARCHAR(255) NOT NULL,
+  `Password` VARCHAR(255) NOT NULL,
+  `Name` VARCHAR(255) NOT NULL,
+  `Description` VARCHAR(255) NULL,
+  PRIMARY KEY (`ID`),
+  UNIQUE INDEX `Username_UNIQUE` (`Username` ASC) VISIBLE)
 ENGINE = InnoDB;
 
 
