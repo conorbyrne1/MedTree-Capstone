@@ -68,3 +68,29 @@ def get_current_user(
         )
 
     return dict(row)
+
+# Get Current Office Dependency
+def get_current_office(
+        credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+        db: Session = Depends(get_db)
+):
+    token = credentials.credentials
+    payload = decode_access_token(token)
+
+    if payload is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+
+    office_id = payload.get("office_id")
+    if office_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Not an office token")
+
+    row = db.execute(text("""
+                          SELECT ID as office_id, Username, Name, Description
+                          FROM MedicalOffice
+                          WHERE ID = :office_id
+                          """), {"office_id": office_id}).mappings().first()
+
+    if row is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Office not found")
+
+    return dict(row)

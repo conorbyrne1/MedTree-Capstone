@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AccountPage.css';
@@ -17,6 +17,13 @@ const AccountPage = () => {
   const [pwForm, setPwForm] = useState({});
   const [pwError, setPwError] = useState('');
   const [pwLoading, setPwLoading] = useState(false);
+  const [officeMode, setOfficeMode] = useState(false);
+  const [connectedOffices, setConnectedOffices] = useState([]);
+  const [officeSearch, setOfficeSearch] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [officeError, setOfficeError] = useState('');
+  const [officeLoading, setOfficeLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" />;
@@ -143,6 +150,83 @@ const AccountPage = () => {
       setPwError(data?.detail || 'Failed to change password.');
     } else {
       setPwMode(false);
+    }
+  };
+
+  const loadConnectedOffices = async () => {
+    setOfficeLoading(true);
+    setOfficeError('');
+    try {
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch('http://localhost:8000/sharing/offices', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to load offices.');
+      setConnectedOffices(data);
+    } catch (err) {
+      setOfficeError(err.message);
+    } finally {
+      setOfficeLoading(false);
+    }
+  };
+
+  const handleOfficeOpen = () => {
+    setOfficeMode(true);
+    setOfficeSearch('');
+    setSearchResults([]);
+    setOfficeError('');
+    loadConnectedOffices();
+  };
+
+  const handleOfficeSearch = async (query) => {
+    setOfficeSearch(query);
+    if (query.trim().length < 2) { setSearchResults([]); return; }
+    setSearchLoading(true);
+    try {
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch(`http://localhost:8000/sharing/offices/search?q=${encodeURIComponent(query)}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Search failed.');
+      setSearchResults(data);
+    } catch (err) {
+      setOfficeError(err.message);
+    } finally {
+      setSearchLoading(false);
+    }
+  };
+
+  const handleConnectOffice = async (officeId) => {
+    try {
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch(`http://localhost:8000/sharing/offices/${officeId}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to connect.');
+      setSearchResults([]);
+      setOfficeSearch('');
+      loadConnectedOffices();
+    } catch (err) {
+      setOfficeError(err.message);
+    }
+  };
+
+  const handleDisconnectOffice = async (officeId) => {
+    try {
+      const token = localStorage.getItem('medtree_token');
+      const res = await fetch(`http://localhost:8000/sharing/offices/${officeId}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || 'Failed to disconnect.');
+      loadConnectedOffices();
+    } catch (err) {
+      setOfficeError(err.message);
     }
   };
 
@@ -342,30 +426,106 @@ const AccountPage = () => {
                   </div>
                 </div>
 
-                <div className="actions-section">
-                  <button className="action-btn secondary" onClick={handleEditOpen}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
-                      <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
-                    </svg>
-                    Edit Profile
-                  </button>
-                  <button className="action-btn secondary" onClick={handlePwOpen}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                      <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                    </svg>
-                    Change Password
-                  </button>
-                  <button className="action-btn danger" onClick={handleLogout}>
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                      <polyline points="16 17 21 12 16 7" />
-                      <line x1="21" y1="12" x2="9" y2="12" />
-                    </svg>
-                    Log Out
-                  </button>
-                </div>
+                {officeMode ? (
+                    <>
+                      <div className="edit-header">
+                        <h2>Office Access</h2>
+                        <p>Control which medical offices can view your records.</p>
+                      </div>
+
+                      {officeError && <div className="edit-error">{officeError}</div>}
+
+                      <div className="office-search-row">
+                        <input
+                            className="edit-input office-search-input"
+                            placeholder="Search offices by name or username..."
+                            value={officeSearch}
+                            onChange={e => handleOfficeSearch(e.target.value)}
+                        />
+                        {searchLoading && <span className="loading-spinner small" />}
+                      </div>
+
+                      {searchResults.length > 0 && (
+                          <div className="office-search-results">
+                            {searchResults.map(o => (
+                                <div key={o.office_id} className="office-result-item">
+                                  <div className="office-result-info">
+                                    <span className="office-result-name">{o.Name}</span>
+                                    {o.Description && <span className="office-result-desc">{o.Description}</span>}
+                                  </div>
+                                  <button
+                                      className="office-connect-btn"
+                                      onClick={() => handleConnectOffice(o.office_id)}
+                                      disabled={connectedOffices.some(c => c.office_id === o.office_id)}
+                                  >
+                                    {connectedOffices.some(c => c.office_id === o.office_id) ? 'Connected' : 'Connect'}
+                                  </button>
+                                </div>
+                            ))}
+                          </div>
+                      )}
+
+                      <div className="details-section" style={{ marginTop: '1.5rem' }}>
+                        <h3>Connected Offices</h3>
+                        {officeLoading && <p className="office-loading-text">Loading...</p>}
+                        {!officeLoading && connectedOffices.length === 0 && (
+                            <p className="office-empty-text">No offices connected yet.</p>
+                        )}
+                        {connectedOffices.map(o => (
+                            <div key={o.office_id} className="detail-row office-row">
+                              <div className="office-connected-info">
+                                <span className="value">{o.Name}</span>
+                                {o.Description && <span className="office-result-desc">{o.Description}</span>}
+                              </div>
+                              <button
+                                  className="office-disconnect-btn"
+                                  onClick={() => handleDisconnectOffice(o.office_id)}
+                              >
+                                Remove
+                              </button>
+                            </div>
+                        ))}
+                      </div>
+
+                      <div className="edit-actions">
+                        <button className="action-btn secondary" onClick={() => setOfficeMode(false)}>
+                          ← Back
+                        </button>
+                      </div>
+                    </>
+                ) : (
+                    <div className="actions-section">
+                      <button className="action-btn secondary" onClick={handleEditOpen}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+                          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+                        </svg>
+                        Edit Profile
+                      </button>
+                      <button className="action-btn secondary" onClick={handlePwOpen}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                          <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                        </svg>
+                        Change Password
+                      </button>
+                      <button className="action-btn secondary" onClick={handleOfficeOpen}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                          <polyline points="9 22 9 12 15 12 15 22" />
+                        </svg>
+                        Manage Office Access
+                      </button>
+                      <button className="action-btn danger" onClick={handleLogout}>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                          <polyline points="16 17 21 12 16 7" />
+                          <line x1="21" y1="12" x2="9" y2="12" />
+                        </svg>
+                        Log Out
+                      </button>
+                    </div>
+                )}
               </>
           )}
         </div>

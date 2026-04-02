@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from routes import auth, family, medical, professionals, account
+from routes import auth, family, medical, professionals, account, office_auth, office, sharing
 from database import engine
 from sqlalchemy import text
 
@@ -46,6 +46,9 @@ app.include_router(family.router)
 app.include_router(medical.router)
 app.include_router(account.router)
 app.include_router(professionals.router)
+app.include_router(office_auth.router)
+app.include_router(office.router)
+app.include_router(sharing.router)
 
 # Health Check
 app.get("/health")

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthPages.css';
 import PasswordAdditions, { PasswordInput } from "./PasswordAdditions";
@@ -20,12 +20,59 @@ const SignupPage = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signup } = useAuth();
+  const { signup, signupOffice } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [isOffice, setIsOffice] = useState(searchParams.get('office') === 'true');
+  const [officeForm, setOfficeForm] = useState({ name: '', username: '', description: '', password: '', confirmPassword: '' });
   const navigate = useNavigate();
+
+  const handleToggle = (officeMode) => {
+    setIsOffice(officeMode);
+    setError('');
+    setOfficeForm({ name: '', username: '', description: '', password: '', confirmPassword: '' });
+    setFormData({
+      firstName: '', middleName: '', lastName: '', email: '',
+      dobDay: '', dobMonth: '', dobYear: '',
+      genderIdentity: '', genderAssignedAtBirth: '',
+      password: '', confirmPassword: ''
+    });
+  };
+
+  const handleOfficeChange = (e) => {
+    const { name, value } = e.target;
+    setOfficeForm(prev => ({ ...prev, [name]: value }));
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleOfficeSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (officeForm.password !== officeForm.confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+    setLoading(true);
+    try {
+      const result = await signupOffice({
+        name: officeForm.name,
+        username: officeForm.username,
+        description: officeForm.description,
+        password: officeForm.password,
+      });
+      if (result.success) {
+        navigate('/office/dashboard');
+      } else {
+        setError(result.error || 'Signup failed. Please try again.');
+      }
+    } catch (err) {
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -91,17 +138,61 @@ const SignupPage = () => {
     <div className="auth-page">
       <div className="auth-container">
         <div className="auth-card signup-card">
-          <div className="auth-header">
-            <h1>Create Account</h1>
-            <p>Start tracking your family's medical history</p>
+          <div className="auth-type-toggle">
+            <button
+                className={`toggle-btn ${!isOffice ? 'active' : ''}`}
+                onClick={() => handleToggle(false)}
+                type="button"
+            >
+              Patient
+            </button>
+            <button
+                className={`toggle-btn ${isOffice ? 'active' : ''}`}
+                onClick={() => handleToggle(true)}
+                type="button"
+            >
+              Medical Office
+            </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="auth-form">
+          <div className="auth-header">
+            <h1>{isOffice ? 'Register Your Office' : 'Create Account'}</h1>
+            <p>{isOffice ? 'Create an office account to access patient records' : 'Start tracking your family\'s medical history'}</p>
+          </div>
+
+          <form onSubmit={isOffice ? handleOfficeSubmit : handleSubmit} className="auth-form">
             {error && <div className="error-message">{error}</div>}
 
-            <div className="form-row">
-              <div className="form-group">
-                <label htmlFor="firstName">First Name</label>
+            {isOffice ? (
+                <>
+                  <div className="form-group">
+                    <label htmlFor="officeName">Office Name</label>
+                    <input type="text" id="officeName" name="name" value={officeForm.name} onChange={handleOfficeChange} placeholder="e.g., City Medical Center" required />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="officeUsername">Username</label>
+                    <input type="text" id="officeUsername" name="username" value={officeForm.username} onChange={handleOfficeChange} placeholder="e.g., citymedical_office" required />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="officeDescription">Description <span className="optional">(optional)</span></label>
+                    <input type="text" id="officeDescription" name="description" value={officeForm.description} onChange={handleOfficeChange} placeholder="e.g., General practice in Burlington, VT" />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="officePassword">Password</label>
+                    <PasswordInput id="officePassword" name="password" value={officeForm.password} onChange={handleOfficeChange} placeholder="••••••••" required className={officeForm.password ? 'pw-attached' : ''} />
+                    <PasswordAdditions password={officeForm.password} />
+                  </div>
+                  <div className="form-group">
+                    <label htmlFor="officeConfirmPassword">Confirm Password</label>
+                    <PasswordInput id="officeConfirmPassword" name="confirmPassword" value={officeForm.confirmPassword} onChange={handleOfficeChange} placeholder="••••••••" required />
+                  </div>
+                </>
+            ) : (
+                <>
+
+                <div className="form-row">
+                  <div className="form-group">
+                    <label htmlFor="firstName">First Name</label>
                 <input
                   type="text"
                   id="firstName"
@@ -242,10 +333,13 @@ const SignupPage = () => {
               />
             </div>
 
-            <button 
-              type="submit" 
-              className="auth-btn"
-              disabled={loading}
+                </>
+            )}
+
+            <button
+                type="submit"
+                className="auth-btn"
+                disabled={loading}
             >
               {loading ? (
                 <span className="loading-spinner" />
@@ -256,7 +350,10 @@ const SignupPage = () => {
           </form>
 
           <div className="auth-footer">
-            <p>Already have an account? <Link to="/login">Back to Login</Link></p>
+            {isOffice
+                ? <p>Already have an office account? <Link to="/login?office=true">Sign in</Link></p>
+                : <p>Already have an account? <Link to="/login">Back to Login</Link></p>
+            }
           </div>
         </div>
       </div>
