@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './FamilyCard.css';
 
 const FamilyCard = ({ member, onUpdate }) => {
-  const [expandedSection, setExpandedSection] = useState('info');
+  const [expandedSection, setExpandedSection] = useState(null); //cards start closed by default to prevent issues with the connector lines
   
   const getTypeClass = () => {
     switch (member.type) {
