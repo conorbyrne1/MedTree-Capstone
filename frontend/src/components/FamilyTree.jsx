@@ -164,6 +164,86 @@ const FamilyTree = ({ familyData }) => {
       return paths;
     };
 
+    // Connect a group of parents to a group of children (siblings + user).
+    // Draws a horizontal bar below parents and, when there are multiple children,
+    // a second horizontal bar above them — joined by a vertical stem in the middle.
+    const familyGroupConnector = (parentSrcs, childDsts) => {
+      if (parentSrcs.length === 0 || childDsts.length === 0) return [];
+
+      // Single parent → single child: plain elbow
+      if (parentSrcs.length === 1 && childDsts.length === 1) {
+        const src = parentSrcs[0];
+        const dst = childDsts[0];
+        const mid = (src.bottomY + dst.topY) / 2;
+        return [
+          `M ${src.centerX} ${src.bottomY} `
+          + `L ${src.centerX} ${mid} `
+          + `L ${dst.centerX} ${mid} `
+          + `L ${dst.centerX} ${dst.topY}`,
+        ];
+      }
+
+      const result = [];
+
+      // Junction bar below parents
+      const maxParentBottom = Math.max(...parentSrcs.map(s => s.bottomY));
+      const parentJunctionY = maxParentBottom + 40;
+
+      // Each parent drops a vertical stem to the junction bar
+      parentSrcs.forEach(src => {
+        result.push(`M ${src.centerX} ${src.bottomY} L ${src.centerX} ${parentJunctionY}`);
+      });
+
+      // Horizontal bar across all parents (only drawn when there are multiple)
+      if (parentSrcs.length > 1) {
+        const leftX  = Math.min(...parentSrcs.map(s => s.centerX));
+        const rightX = Math.max(...parentSrcs.map(s => s.centerX));
+        result.push(`M ${leftX} ${parentJunctionY} L ${rightX} ${parentJunctionY}`);
+      }
+
+      const parentMidX = parentSrcs.length === 1
+        ? parentSrcs[0].centerX
+        : (Math.min(...parentSrcs.map(s => s.centerX)) + Math.max(...parentSrcs.map(s => s.centerX))) / 2;
+
+      if (childDsts.length === 1) {
+        // Single child: elbow from parent junction down to child
+        const dst  = childDsts[0];
+        const mid2 = (parentJunctionY + dst.topY) / 2;
+        result.push(
+          `M ${parentMidX} ${parentJunctionY} `
+          + `L ${parentMidX} ${mid2} `
+          + `L ${dst.centerX} ${mid2} `
+          + `L ${dst.centerX} ${dst.topY}`,
+        );
+      } else {
+        // Multiple children: second horizontal bar above the child row
+        const minChildTop     = Math.min(...childDsts.map(d => d.topY));
+        const childJunctionY  = minChildTop - 40;
+        const childLeftX      = Math.min(...childDsts.map(d => d.centerX));
+        const childRightX     = Math.max(...childDsts.map(d => d.centerX));
+        const childMidX       = (childLeftX + childRightX) / 2;
+        const midY            = (parentJunctionY + childJunctionY) / 2;
+
+        // Stem from parent junction down to child junction, elbowing if centres differ
+        result.push(
+          `M ${parentMidX} ${parentJunctionY} `
+          + `L ${parentMidX} ${midY} `
+          + `L ${childMidX} ${midY} `
+          + `L ${childMidX} ${childJunctionY}`,
+        );
+
+        // Horizontal bar across all children
+        result.push(`M ${childLeftX} ${childJunctionY} L ${childRightX} ${childJunctionY}`);
+
+        // Each child rises from its top to the child junction bar
+        childDsts.forEach(dst => {
+          result.push(`M ${dst.centerX} ${dst.topY} L ${dst.centerX} ${childJunctionY}`);
+        });
+      }
+
+      return result;
+    };
+
     // Helper: group an array of members by a key and return { key → { dst, srcs[] } }
     const groupByDest = (members, getDestId) => {
       const map = {};
@@ -183,6 +263,7 @@ const FamilyTree = ({ familyData }) => {
     const {
       user,
       parents                = [],
+      siblings               = [],
       grandparents           = [],
       greatGrandparents      = [],
       greatGreatGrandparents = [],
@@ -190,11 +271,11 @@ const FamilyTree = ({ familyData }) => {
 
     const newPaths = [];
 
-    // Parents → user (all parents share one destination)
+    // Parents → user + siblings (all share the same parents)
     if (user) {
-      const dst  = getPos(user.id);
-      const srcs = parents.map(p => getPos(p.id)).filter(Boolean);
-      groupConnector(srcs, dst).forEach(p => newPaths.push(p));
+      const parentSrcs = parents.map(p => getPos(p.id)).filter(Boolean);
+      const childDsts  = [user, ...siblings].map(c => getPos(c.id)).filter(Boolean);
+      familyGroupConnector(parentSrcs, childDsts).forEach(p => newPaths.push(p));
     }
 
     // Grandparents → their parent (group by parentId)
