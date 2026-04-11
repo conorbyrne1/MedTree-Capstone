@@ -185,7 +185,6 @@ const AddFamilyMemberPage = () => {
                                     name="relatedToId"
                                     value={form.relatedToId}
                                     onChange={handleChange}
-                                    required
                                 >
                                     <option value="">Myself (you)</option>
                                     {relatedToOptions.map(m => (
