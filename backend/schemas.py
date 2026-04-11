@@ -172,3 +172,61 @@ class ChangePasswordRequest(BaseModel):
 
 class ChangePasswordResponse(BaseModel):
     success: bool
+
+# Edit / Delete — Family Members
+class EditFamilyMemberRequest(BaseModel):
+    firstName: str
+    lastName: str
+    middleName: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
+    dob: Optional[str] = None
+    isDeceased: bool = False
+
+class EditableFamilyMemberSchema(BaseModel):
+    personId: int
+    prefixedId: str
+    name: str
+    memberType: str
+    firstName: str
+    lastName: str
+    middleName: Optional[str] = None
+    dob: Optional[str] = None
+    genderIdentity: Optional[str] = None
+    genderAssignedAtBirth: Optional[str] = None
+    isDeceased: bool = False
+
+# Edit / Delete — Medical Professionals
+class ProfessionalResponse(BaseModel):
+    id: int
+    name: str
+    specialty: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+class EditProfessionalRequest(BaseModel):
+    name: str
+    specialty: str
+    phone: Optional[str] = None
+    email: Optional[str] = None
+    address: Optional[str] = None
+
+# Edit Info — Conditions list with IDs
+class ConditionItemSchema(BaseModel):
+    diagnosisId: int
+    issue: str
+    notes: str = ''
+
+class MemberConditionsSchema(BaseModel):
+    personId: int
+    prefixedId: str
+    memberName: str
+    memberType: str
+    conditions: list[ConditionItemSchema] = []
+
+# Edit Info — Medications list with IDs
+class MedicationItemSchema(BaseModel):
+    medicationId: int
+    name: str
+    description: Optional[str] = None

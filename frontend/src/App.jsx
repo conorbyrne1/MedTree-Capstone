@@ -11,6 +11,7 @@ import AccountPage from './pages/AccountPage';
 import AddMedicalPage from './pages/AddMedicalPage';
 import AddProfessionalPage from './pages/AddProfessionalPage';
 import AddFamilyMemberPage from "./pages/AddFamilyMemberPage";
+import EditInfoPage from './pages/EditInfoPage';
 import OfficeLoginPage from './pages/OfficeLoginPage';
 import OfficeSignupPage from './pages/OfficeSignupPage';
 import OfficeDashboardPage from './pages/OfficeDashboardPage';
@@ -36,6 +37,7 @@ const App = () => {
               <Route path="/add-medical" element={<AddMedicalPage />} />
               <Route path="/add-professional" element={<AddProfessionalPage />} />
               <Route path="/add-family" element={<AddFamilyMemberPage />} />
+              <Route path="/edit-info" element={<EditInfoPage />} />
 
               {/* Office routes */}
               <Route path="/office/login" element={<OfficeLoginPage />} />
