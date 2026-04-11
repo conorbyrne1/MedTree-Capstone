@@ -1,0 +1,345 @@
+/* EditInfoPage — extends AddMedicalPage.css */
+
+.edit-info-container {
+  max-width: 720px;
+}
+
+.edit-info-card {
+  padding: 0;
+  overflow: hidden;
+}
+
+/* ── Tab content ────────────────────────────────────────────────────────────── */
+
+.edit-tab-content {
+  padding: 1.75rem;
+}
+
+.edit-loading {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.edit-empty {
+  text-align: center;
+  color: var(--text-secondary);
+  padding: 2rem 0;
+}
+
+/* ── Section headings (Medical Info sub-sections) ───────────────────────────── */
+
+.edit-section {
+  margin-bottom: 2rem;
+}
+
+.edit-section:last-child {
+  margin-bottom: 0;
+}
+
+.edit-section-title {
+  font-size: 1.05rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* ── Group header (per-person block within Medical Info) ─────────────────────── */
+
+.edit-group {
+  margin-bottom: 1.25rem;
+}
+
+.edit-group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+/* ── List of items ──────────────────────────────────────────────────────────── */
+
+.edit-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.edit-item {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color var(--transition-fast);
+}
+
+.edit-item:hover {
+  border-color: #bbb;
+}
+
+/* Row layout (collapsed / view mode) */
+.edit-item-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.875rem 1rem;
+  flex-wrap: wrap;
+}
+
+.edit-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.edit-item-name {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-size: 1rem;
+}
+
+.edit-item-type {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+  background: var(--border-color);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  display: inline-block;
+  width: fit-content;
+}
+
+.edit-item-detail {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.edit-item-deceased {
+  font-size: 0.8rem;
+  color: #888;
+  font-style: italic;
+}
+
+/* Buttons */
+.edit-item-btns {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.edit-btn {
+  padding: 0.45rem 1rem;
+  background: var(--bg-card);
+  border: 2px solid var(--user-primary);
+  border-radius: 8px;
+  color: var(--user-primary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.edit-btn:hover {
+  background: var(--user-primary);
+  color: white;
+}
+
+.remove-btn {
+  padding: 0.45rem 1rem;
+  background: var(--bg-card);
+  border: 2px solid #e05c5c;
+  border-radius: 8px;
+  color: #e05c5c;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+}
+
+.remove-btn:hover {
+  background: #e05c5c;
+  color: white;
+}
+
+/* Inline confirmation */
+.confirm-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+
+.confirm-text {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.confirm-yes {
+  padding: 0.35rem 0.75rem;
+  background: #e05c5c;
+  color: white;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: background var(--transition-fast);
+}
+
+.confirm-yes:hover {
+  background: #c94444;
+}
+
+.confirm-no {
+  padding: 0.35rem 0.75rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.confirm-no:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* ── Inline edit form ────────────────────────────────────────────────────────── */
+
+.edit-inline-form {
+  padding: 1.25rem;
+  background: var(--bg-card);
+}
+
+.edit-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.edit-item-editing-label {
+  font-size: 0.8rem;
+  color: var(--user-primary);
+  font-weight: 600;
+  background: rgba(0, 184, 230, 0.1);
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+}
+
+.inline-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+  margin-bottom: 1rem;
+}
+
+.checkbox-group {
+  flex-direction: row !important;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.checkbox-group input[type='checkbox'] {
+  width: auto;
+  margin: 0;
+}
+
+.checkbox-group label {
+  margin-bottom: 0;
+}
+
+.optional {
+  font-weight: normal;
+  opacity: 0.6;
+  font-size: 0.9em;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.save-btn {
+  flex: 1;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, var(--user-primary), var(--user-secondary));
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+}
+
+.save-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 184, 230, 0.35);
+}
+
+.save-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.cancel-btn {
+  padding: 0.75rem 1.25rem;
+  background: var(--bg-primary);
+  border: 2px solid var(--border-color);
+  border-radius: 10px;
+  font-size: 1rem;
+  color: var(--text-secondary);
+  transition: all var(--transition-fast);
+}
+
+.cancel-btn:hover {
+  border-color: var(--text-secondary);
+  color: var(--text-primary);
+}
+
+/* ── Error message (mirrors success-message in AddMedicalPage.css) ────────────── */
+
+.error-message {
+  padding: 1rem;
+  background: #f8d7da;
+  border: 1px solid #f5c6cb;
+  border-radius: 10px;
+  color: #721c24;
+  margin-bottom: 1.5rem;
+  font-size: 0.95rem;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 600px) {
+  .edit-item-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .edit-item-btns {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .edit-actions {
+    flex-direction: column;
+  }
+
+  .cancel-btn {
+    width: 100%;
+    text-align: center;
+  }
+}

@@ -6,6 +6,7 @@ from auth import get_current_user
 from schemas import (
     AddConditionRequest, AddConditionResponse,
     AddMedicationRequest, AddMedicationResponse,
+    MemberConditionsSchema, ConditionItemSchema, MedicationItemSchema,
 )
 from datetime import datetime
 
@@ -143,3 +144,120 @@ def add_medication(
 
     db.commit()
     return AddMedicationResponse(success=True)
+
+
+# ── Edit-info endpoints ───────────────────────────────────────────────────────
+
+# GET /medical/conditions-list — all conditions for every family member
+@router.get("/conditions-list", response_model=list[MemberConditionsSchema])
+def get_conditions_list(
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    from routes.family import _all_tree_person_ids
+    person_id = current_user["PersonID"]
+
+    # Include the logged-in user plus all tree members
+    user_row = db.execute(text("SELECT * FROM Person WHERE ID = :id"), {"id": person_id}).mappings().first()
+    members = [{"personId": person_id, "prefixedId": f"u{person_id}",
+                "memberName": f"{user_row['FirstName']} {user_row['LastName']}", "memberType": "you"}]
+
+    for entry in _all_tree_person_ids(person_id, db):
+        r = entry["row"]
+        members.append({
+            "personId": r["ID"],
+            "prefixedId": f"{entry['prefix']}{r['ID']}",
+            "memberName": f"{r['FirstName']} {r['LastName']}",
+            "memberType": entry["type"],
+        })
+
+    result = []
+    for m in members:
+        rows = db.execute(text("""
+            SELECT md.ID AS diagnosisId, md.DiagnosisName, md.DiagnosisDescription
+            FROM PersonMedicalDiagnosis pmd
+            JOIN MedicalDiagnosis md ON md.ID = pmd.DiagnosisID
+            WHERE pmd.PersonID = :pid AND pmd.IsCauseOfDeath = 0
+        """), {"pid": m["personId"]}).mappings().all()
+
+        conditions = [
+            ConditionItemSchema(
+                diagnosisId=row["diagnosisId"],
+                issue=row["DiagnosisName"],
+                notes=row["DiagnosisDescription"] or '',
+            )
+            for row in rows
+        ]
+        result.append(MemberConditionsSchema(
+            personId=m["personId"],
+            prefixedId=m["prefixedId"],
+            memberName=m["memberName"],
+            memberType=m["memberType"],
+            conditions=conditions,
+        ))
+    return result
+
+
+# DELETE /medical/condition/{person_id}/{diagnosis_id}
+@router.delete("/condition/{person_id}/{diagnosis_id}")
+def delete_condition(
+        person_id: int,
+        diagnosis_id: int,
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    from routes.family import _all_tree_person_ids
+    current_person_id = current_user["PersonID"]
+
+    # Allow deleting from self or any tree member
+    allowed_ids = {current_person_id} | {e["row"]["ID"] for e in _all_tree_person_ids(current_person_id, db)}
+    if person_id not in allowed_ids:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Person not found in your tree.")
+
+    db.execute(text("""
+        DELETE FROM PersonMedicalDiagnosis
+        WHERE PersonID = :pid AND DiagnosisID = :did
+    """), {"pid": person_id, "did": diagnosis_id})
+    db.commit()
+    return {"success": True}
+
+
+# GET /medical/medications-list — current user's active medications
+@router.get("/medications-list", response_model=list[MedicationItemSchema])
+def get_medications_list(
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    person_id = current_user["PersonID"]
+    rows = db.execute(text("""
+        SELECT m.ID AS medicationId, m.MedicationName, m.MedicationDescription
+        FROM PersonMedications pm
+        JOIN Medications m ON m.ID = pm.MedicationID
+        WHERE pm.PersonID = :pid AND pm.DateStopped IS NULL
+    """), {"pid": person_id}).mappings().all()
+
+    return [
+        MedicationItemSchema(
+            medicationId=row["medicationId"],
+            name=row["MedicationName"],
+            description=row["MedicationDescription"],
+        )
+        for row in rows
+    ]
+
+
+# DELETE /medical/medication/{medication_id} — stop the user's medication
+@router.delete("/medication/{medication_id}")
+def delete_medication(
+        medication_id: int,
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    person_id = current_user["PersonID"]
+    db.execute(text("""
+        UPDATE PersonMedications
+        SET DateStopped = NOW()
+        WHERE PersonID = :pid AND MedicationID = :mid AND DateStopped IS NULL
+    """), {"pid": person_id, "mid": medication_id})
+    db.commit()
+    return {"success": True}

@@ -6,7 +6,7 @@ from auth import get_current_user
 from schemas import (
     FamilyTreeResponse, FamilyMemberResponse, PersonInfoSchema,
     MedicalIssueSchema, MedicationSchema, DeathInfoSchema,
-    AddFamilyMemberRequest
+    AddFamilyMemberRequest, EditFamilyMemberRequest, EditableFamilyMemberSchema,
 )
 from datetime import datetime
 
@@ -416,3 +416,164 @@ def add_family_member(
         db,
         parent_id=body.relatedToId
     )
+
+
+# ── Edit-info helpers ─────────────────────────────────────────────────────────
+
+def _all_tree_person_ids(person_id: int, db: Session) -> list[dict]:
+    """
+    Returns a flat list of {person_id, prefixed_id, member_type} dicts for every
+    person in the user's family tree (excluding the user themselves).
+    """
+    rel_types = db.execute(text("SELECT ID, TypeName FROM PersonRelationshipTypes")).mappings().all()
+    rel_type_map = {row["TypeName"]: row["ID"] for row in rel_types}
+
+    def get_relatives(from_id: int, type_name: str):
+        type_id = rel_type_map.get(type_name)
+        if type_id is None:
+            return []
+        rows = db.execute(text("""
+            SELECT p.* FROM Person p
+            JOIN PersonRelationships pr ON pr.PersonTwoID = p.ID
+            WHERE pr.PersonOneID = :pid AND pr.RelationshipTypeID = :tid
+        """), {"pid": from_id, "tid": type_id}).mappings().all()
+        return [dict(r) for r in rows]
+
+    results = []
+
+    parent_rows = get_relatives(person_id, "parent")
+    for r in parent_rows:
+        results.append({"row": r, "type": "parent", "prefix": "p"})
+
+    sibling_rows = get_relatives(person_id, "sibling")
+    for r in sibling_rows:
+        results.append({"row": r, "type": "sibling", "prefix": "s"})
+
+    grandparent_rows = []
+    for pr in parent_rows:
+        for r in get_relatives(pr["ID"], "parent"):
+            results.append({"row": r, "type": "grandparent", "prefix": "g"})
+            grandparent_rows.append(r)
+
+    for pr in parent_rows:
+        for r in get_relatives(pr["ID"], "sibling"):
+            results.append({"row": r, "type": "aunt/uncle", "prefix": "a"})
+
+    great_gp_rows = []
+    for gr in grandparent_rows:
+        for r in get_relatives(gr["ID"], "parent"):
+            results.append({"row": r, "type": "great-grandparent", "prefix": "gg"})
+            great_gp_rows.append(r)
+
+    for gr in great_gp_rows:
+        for r in get_relatives(gr["ID"], "parent"):
+            results.append({"row": r, "type": "great-great-grandparent", "prefix": "ggg"})
+
+    return results
+
+
+# GET /family/members — flat editable list
+@router.get("/members", response_model=list[EditableFamilyMemberSchema])
+def get_family_members_list(
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    person_id = current_user["PersonID"]
+    entries = _all_tree_person_ids(person_id, db)
+
+    result = []
+    for entry in entries:
+        row = entry["row"]
+        dob_str = row["DateOfBirth"].strftime("%Y-%m-%d") if row["DateOfBirth"] else None
+        result.append(EditableFamilyMemberSchema(
+            personId=row["ID"],
+            prefixedId=f"{entry['prefix']}{row['ID']}",
+            name=f"{row['FirstName']} {row['LastName']}",
+            memberType=entry["type"],
+            firstName=row["FirstName"],
+            lastName=row["LastName"],
+            middleName=row["MiddleName"],
+            dob=dob_str,
+            genderIdentity=row["GenderIdentity"],
+            genderAssignedAtBirth=row["GenderAssignedAtBirth"],
+            isDeceased=bool(row["IsDeceased"]),
+        ))
+    return result
+
+
+# PUT /family/member/{person_id} — update details
+@router.put("/member/{person_id}")
+def update_family_member(
+        person_id: int,
+        body: EditFamilyMemberRequest,
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    current_person_id = current_user["PersonID"]
+    if person_id == current_person_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Use the account page to edit your own profile.")
+
+    # Verify this person is in the user's tree
+    tree_ids = {e["row"]["ID"] for e in _all_tree_person_ids(current_person_id, db)}
+    if person_id not in tree_ids:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Family member not found in your tree.")
+
+    dob = None
+    if body.dob:
+        for fmt in ("%Y-%m-%d", "%d/%m/%Y"):
+            try:
+                dob = datetime.strptime(body.dob, fmt).date()
+                break
+            except ValueError:
+                continue
+
+    db.execute(text("""
+        UPDATE Person
+        SET FirstName = :first, MiddleName = :middle, LastName = :last,
+            IsDeceased = :deceased, DateOfBirth = :dob,
+            GenderIdentity = :gender_identity,
+            GenderAssignedAtBirth = :gender_assigned
+        WHERE ID = :id
+    """), {
+        "first": body.firstName,
+        "middle": body.middleName,
+        "last": body.lastName,
+        "deceased": 1 if body.isDeceased else 0,
+        "dob": dob,
+        "gender_identity": body.genderIdentity,
+        "gender_assigned": body.genderAssignedAtBirth,
+        "id": person_id,
+    })
+    db.commit()
+    return {"success": True}
+
+
+# DELETE /family/member/{person_id} — remove from tree
+@router.delete("/member/{person_id}")
+def delete_family_member(
+        person_id: int,
+        db: Session = Depends(get_db),
+        current_user: dict = Depends(get_current_user)
+):
+    current_person_id = current_user["PersonID"]
+    if person_id == current_person_id:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="You cannot remove yourself.")
+
+    # Verify this person is in the user's tree
+    tree_ids = {e["row"]["ID"] for e in _all_tree_person_ids(current_person_id, db)}
+    if person_id not in tree_ids:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND,
+                            detail="Family member not found in your tree.")
+
+    db.execute(text("DELETE FROM PersonMedicalDiagnosis WHERE PersonID = :id"), {"id": person_id})
+    db.execute(text("DELETE FROM PersonMedications WHERE PersonID = :id"), {"id": person_id})
+    db.execute(text("""
+        DELETE FROM PersonRelationships
+        WHERE PersonOneID = :id OR PersonTwoID = :id
+    """), {"id": person_id})
+    db.execute(text("DELETE FROM Person WHERE ID = :id"), {"id": person_id})
+    db.commit()
+    return {"success": True}
