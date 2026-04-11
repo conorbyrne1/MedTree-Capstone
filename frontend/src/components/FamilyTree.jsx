@@ -165,12 +165,13 @@ const FamilyTree = ({ familyData }) => {
     };
 
     // Connect a group of parents to a group of children (siblings + user).
-    // Draws a horizontal bar below parents and, when there are multiple children,
-    // a second horizontal bar above them — joined by a vertical stem in the middle.
+    // Uses a single horizontal junction bar at the midpoint between the two rows.
+    // Every parent drops a vertical stem to the bar; every child rises from it.
+    // This avoids the double-bar clutter when rows are close together.
     const familyGroupConnector = (parentSrcs, childDsts) => {
       if (parentSrcs.length === 0 || childDsts.length === 0) return [];
 
-      // Single parent → single child: plain elbow
+      // Single parent → single child: plain elbow (no bar needed)
       if (parentSrcs.length === 1 && childDsts.length === 1) {
         const src = parentSrcs[0];
         const dst = childDsts[0];
@@ -183,63 +184,31 @@ const FamilyTree = ({ familyData }) => {
         ];
       }
 
+      // Single junction bar at the midpoint between the parent bottoms and child tops.
+      // The bar spans the full horizontal extent of both parents and children so every
+      // node can connect straight up/down without an elbow.
+      const maxParentBottom = Math.max(...parentSrcs.map(s => s.bottomY));
+      const minChildTop     = Math.min(...childDsts.map(d => d.topY));
+      const junctionY       = (maxParentBottom + minChildTop) / 2;
+
+      const allX     = [...parentSrcs.map(s => s.centerX), ...childDsts.map(d => d.centerX)];
+      const barLeft  = Math.min(...allX);
+      const barRight = Math.max(...allX);
+
       const result = [];
 
-      // Junction bar below parents
-      const maxParentBottom = Math.max(...parentSrcs.map(s => s.bottomY));
-      const parentJunctionY = maxParentBottom + 40;
-
-      // Each parent drops a vertical stem to the junction bar
+      // Each parent drops a straight vertical stem to the bar
       parentSrcs.forEach(src => {
-        result.push(`M ${src.centerX} ${src.bottomY} L ${src.centerX} ${parentJunctionY}`);
+        result.push(`M ${src.centerX} ${src.bottomY} L ${src.centerX} ${junctionY}`);
       });
 
-      // Horizontal bar across all parents (only drawn when there are multiple)
-      if (parentSrcs.length > 1) {
-        const leftX  = Math.min(...parentSrcs.map(s => s.centerX));
-        const rightX = Math.max(...parentSrcs.map(s => s.centerX));
-        result.push(`M ${leftX} ${parentJunctionY} L ${rightX} ${parentJunctionY}`);
-      }
+      // The single horizontal junction bar
+      result.push(`M ${barLeft} ${junctionY} L ${barRight} ${junctionY}`);
 
-      const parentMidX = parentSrcs.length === 1
-        ? parentSrcs[0].centerX
-        : (Math.min(...parentSrcs.map(s => s.centerX)) + Math.max(...parentSrcs.map(s => s.centerX))) / 2;
-
-      if (childDsts.length === 1) {
-        // Single child: elbow from parent junction down to child
-        const dst  = childDsts[0];
-        const mid2 = (parentJunctionY + dst.topY) / 2;
-        result.push(
-          `M ${parentMidX} ${parentJunctionY} `
-          + `L ${parentMidX} ${mid2} `
-          + `L ${dst.centerX} ${mid2} `
-          + `L ${dst.centerX} ${dst.topY}`,
-        );
-      } else {
-        // Multiple children: second horizontal bar above the child row
-        const minChildTop     = Math.min(...childDsts.map(d => d.topY));
-        const childJunctionY  = minChildTop - 40;
-        const childLeftX      = Math.min(...childDsts.map(d => d.centerX));
-        const childRightX     = Math.max(...childDsts.map(d => d.centerX));
-        const childMidX       = (childLeftX + childRightX) / 2;
-        const midY            = (parentJunctionY + childJunctionY) / 2;
-
-        // Stem from parent junction down to child junction, elbowing if centres differ
-        result.push(
-          `M ${parentMidX} ${parentJunctionY} `
-          + `L ${parentMidX} ${midY} `
-          + `L ${childMidX} ${midY} `
-          + `L ${childMidX} ${childJunctionY}`,
-        );
-
-        // Horizontal bar across all children
-        result.push(`M ${childLeftX} ${childJunctionY} L ${childRightX} ${childJunctionY}`);
-
-        // Each child rises from its top to the child junction bar
-        childDsts.forEach(dst => {
-          result.push(`M ${dst.centerX} ${dst.topY} L ${dst.centerX} ${childJunctionY}`);
-        });
-      }
+      // Each child rises a straight vertical stem from its top to the bar
+      childDsts.forEach(dst => {
+        result.push(`M ${dst.centerX} ${dst.topY} L ${dst.centerX} ${junctionY}`);
+      });
 
       return result;
     };
