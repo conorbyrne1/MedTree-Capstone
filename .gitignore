@@ -1,5 +1,11 @@
 # Made from https://www.coderstool.com/gitignore-generator with 'intellij' and 'react'
 
+# Python bytecode — never commit compiled files
+*.pyc
+*.pyo
+**/__pycache__/
+
+
 
 ### Intellij ###
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio, WebStorm and Rider
