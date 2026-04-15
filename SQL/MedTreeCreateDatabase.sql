@@ -219,7 +219,7 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `medtree`.`Medications` ;
 
 CREATE TABLE IF NOT EXISTS `medtree`.`Medications` (
-  `ID` INT NOT NULL,
+  `ID` INT NOT NULL AUTO_INCREMENT,
   `MedicationName` VARCHAR(255) NOT NULL,
   `MedicationDescription` TEXT NULL,
   PRIMARY KEY (`ID`))
