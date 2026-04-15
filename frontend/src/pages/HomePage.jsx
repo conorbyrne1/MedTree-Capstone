@@ -148,11 +148,11 @@ const HomePage = () => {
       <div className="landing-content">
         <div className="hero-section">
           <h1>Track Your Family's<br /><span>Medical History</span></h1>
-          <div style={{ width: '220px', height: '220px', margin: '0 auto 1.5rem' }}>
+          <div style={{ width: '500px', height: '500px', margin: '0 auto 1.5rem' }}>
             <SVG3D
                 svg={mySvg}
                 smoothness={0.6}
-                color="#ffffff"
+                color="#00b8e6"
                 material="rubber"
                 metalness={0}
                 roughness={0.9}
@@ -160,7 +160,6 @@ const HomePage = () => {
                 cursorOrbit
             />
           </div>
-          <p>here</p>
           <p>
             MedTree helps you visualize and manage your family's medical history, 
             making it easier to understand genetic health patterns and share important 

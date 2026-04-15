@@ -22,6 +22,7 @@ const Header = () => {
     <header className="header">
       <div className="header-container">
         <Link to={isAuthenticated ? '/home' : '/'} className="logo">
+          <img src="../images/MedTreeLogoRound.png" alt={"logo"} width={100} height={100} />
           <h1>MedTree</h1>
         </Link>
         
