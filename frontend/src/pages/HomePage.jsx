@@ -7,7 +7,7 @@ import {SVG3D} from "3dsvg";
 const HomePage = () => {
   const { isAuthenticated, user } = useAuth();
 
-  const mySvg = `<?xml version="1.0" encoding="UTF-8"?>
+  const roundMedTreeLogo3D = `<?xml version="1.0" encoding="UTF-8"?>
 <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 588.99 598.22">
   <defs>
     <style>
@@ -137,6 +137,7 @@ const HomePage = () => {
               <p>Update or remove existing family members, medical records, and professionals</p>
             </Link>
           </div>
+
         </div>
       </div>
     );
@@ -150,7 +151,7 @@ const HomePage = () => {
           <h1>Track Your Family's<br /><span>Medical History</span></h1>
           <div style={{ width: '500px', height: '500px', margin: '0 auto 1.5rem' }}>
             <SVG3D
-                svg={mySvg}
+                svg={roundMedTreeLogo3D}
                 smoothness={0.6}
                 color="#00b8e6"
                 material="rubber"
@@ -158,6 +159,7 @@ const HomePage = () => {
                 roughness={0.9}
                 animate="float"
                 cursorOrbit
+                resetOnIdle
             />
           </div>
           <p>
