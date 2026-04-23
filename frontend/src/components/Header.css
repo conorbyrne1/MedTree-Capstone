@@ -15,6 +15,12 @@
   align-items: center;
 }
 
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .logo h1 {
   font-family: var(--font-display);
   font-size: 2rem;
@@ -26,6 +32,14 @@
 
 .logo:hover h1 {
   color: var(--user-primary);
+}
+
+.logo img {
+  transition: filter var(--transition-fast);
+}
+
+.logo:hover img {
+  filter: invert(55%) sepia(90%) saturate(500%) hue-rotate(160deg) brightness(95%);
 }
 
 .nav {
