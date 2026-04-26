@@ -36,15 +36,16 @@ const AddMedicalPage = () => {
         });
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || 'Failed to load family members.');
-        if (data.success) {
-          const members = [
-            data.data.user,
-            ...data.data.parents,
-            ...data.data.grandparents,
-            ...data.data.greatGrandparents
-          ].filter(Boolean);
-          setFamilyMembers(members);
-        }
+        const members = [
+          data.user,
+          ...(data.parents || []),
+          ...(data.siblings || []),
+          ...(data.grandparents || []),
+          ...(data.auntsUncles || []),
+          ...(data.greatGrandparents || []),
+          ...(data.greatGreatGrandparents || []),
+        ].filter(Boolean);
+        setFamilyMembers(members);
       } catch (err) {
         console.error('Failed to load family members:', err);
       } finally {

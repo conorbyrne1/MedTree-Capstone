@@ -295,9 +295,17 @@ const FamilyTree = ({ familyData }) => {
     // Window resize can shift flex-row positions without changing the canvas size.
     window.addEventListener('resize', calcPaths);
 
+    // transitionend covers the case where a shorter card collapses back below the
+    // height of a taller neighbour: the canvas stops shrinking (neighbour now sets
+    // the row height) before the collapsing card finishes its max-height transition,
+    // so ResizeObserver stops firing while offsetHeight is still stale. Listening
+    // for transitionend guarantees one final recalc after every animation settles.
+    canvas.addEventListener('transitionend', calcPaths);
+
     return () => {
       ro.disconnect();
       window.removeEventListener('resize', calcPaths);
+      canvas.removeEventListener('transitionend', calcPaths);
     };
   }, [calcPaths]);
 
